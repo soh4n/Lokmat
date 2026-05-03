@@ -1,53 +1,67 @@
-# 🗳️ LokMat — AI-Powered Election Companion
+# LokMat — AI-Powered Election Companion
 
 > **Google for Developers — PromptWars Hackathon**
 
-## 🎯 Chosen Vertical
+## Chosen Vertical
 **Civic / Elections**
 
-LokMat (लोकमत) is a smart, AI-powered election assistant that helps Indian voters navigate the entire electoral process — from registration to casting their vote. It features **VoteSathi AI**, a bilingual (Hindi/English) chatbot powered by Google Gemini, that answers election-related queries with factual, politically neutral information.
+LokMat is a smart, AI-powered election assistant that helps Indian voters navigate the entire electoral process — from registration to casting their vote. It features **VoteSathi AI**, a bilingual (Hindi/English) chatbot powered by Google Gemini, that answers election-related queries with factual, politically neutral information.
 
-## 🧠 Approach and Logic
+## Approach and Logic
 Our approach prioritizes **speed, security, and accessibility**.
 - **Context-Aware AI:** We don't just pass strings to an LLM. We classify intents, retrieve session memory from Redis/Cloud SQL, and enforce strict "Civic/Elections" sandboxing rules before routing to the right Gemini model (Flash for chat, Pro for deep reasoning).
-- **Fault-Tolerant Streaming UI (The 100/100 Production Standard):** Using Server-Sent Events (SSE) combined with an intelligent Model Fallback system. Most projects fail when a demo hits a rate limit; our app intercepts `429 Too Many Requests` and quota failures on the primary model (Gemini 3.1 Flash Lite), seamlessly switches to a highly available fallback (Gemma 4 31B), and *still* streams the text directly to the UI without dropping the connection. First-token latency remains sub-500ms.
+- **Fault-Tolerant Streaming UI (The 100/100 Production Standard):** Using Server-Sent Events (SSE) combined with an intelligent Model Fallback system. Most projects fail when a demo hits a rate limit; our app intercepts 429 Too Many Requests and quota failures on the primary model (Gemini 3.1 Flash Lite), seamlessly switches to a highly available fallback (Gemma 4 31B), and still streams the text directly to the UI without dropping the connection. First-token latency remains sub-500ms.
 - **Production-Ready Infrastructure:** We utilized Terraform to provision a fully isolated VPC, Cloud SQL, Redis, and Secret Manager on Google Cloud. 
 - **Robust Authentication:** Leveraging Firebase Auth (Google Sign-In), the backend validates JWTs natively without exposing any API keys to the frontend.
 
-## ⚙️ How the Solution Works
+## How the Solution Works
 1. **Authentication:** The user logs in via Google (Firebase Auth). A secure ID token is passed to the FastAPI backend.
 2. **Interaction:** The user asks a question to VoteSathi AI.
 3. **Processing:** The FastAPI backend verifies the token, retrieves the user's past session context from Redis, and builds an enriched prompt.
-4. **Inference:** The prompt is sent to Vertex AI (Gemini 1.5 Flash).
+4. **Inference:** The prompt is sent to Vertex AI (Gemini 3.1 Flash Lite).
 5. **Streaming:** The response is streamed back via SSE. The React frontend consumes the stream chunks and paints them to the screen instantly, preventing UI blocking or jumping.
 
-## 📝 Assumptions Made
-- Users have a relatively modern browser capable of utilizing `ReadableStream` and Server-Sent Events (SSE).
+## Assumptions Made
+- Users have a relatively modern browser capable of utilizing ReadableStream and Server-Sent Events (SSE).
 - The target demographic is Indian citizens, so the AI is explicitly tuned to provide context regarding the Election Commission of India (ECI) guidelines and the Indian electoral calendar.
 - The GCP environment running the backend has Billing enabled (required for Serverless VPC Access, Cloud SQL, and Vertex AI inference).
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 | Feature | Description |
 |---------|-------------|
-| 🤖 **VoteSathi AI** | Gemini-powered bilingual chatbot for election guidance |
-| 🗳️ **Voter Slip** | Digital voter slip generation with EPIC validation |
-| 📅 **Election Timeline** | Upcoming elections 2024–2028 with phase tracking |
-| 📍 **Booth Finder** | Find your polling station and check queue status |
-| 📋 **Candidate Info** | View candidates and party manifestos at a glance |
-| 🆘 **SOS / Helpline** | One-tap access to Election Helpline 1950 |
-| 🤝 **Volunteering** | Sign up for election day volunteering |
-| 📚 **Learn** | Educational content on Lok Sabha & Vidhan Sabha |
-| 🌐 **Bilingual** | Full Hindi + English support |
-| ♿ **Accessible** | WCAG 2.1 AA compliant with keyboard nav & screen reader support |
+| **VoteSathi AI** | Gemini-powered bilingual chatbot for election guidance |
+| **Voter Slip** | Digital voter slip generation with EPIC validation |
+| **Election Timeline** | Upcoming elections 2024–2028 with phase tracking |
+| **Booth Finder** | Find your polling station and check queue status |
+| **Candidate Info** | View candidates and party manifestos at a glance |
+| **SOS / Helpline** | One-tap access to Election Helpline 1950 |
+| **Volunteering** | Sign up for election day volunteering |
+| **Learn** | Educational content on Lok Sabha and Vidhan Sabha |
+| **Bilingual** | Full Hindi and English support |
+| **Accessible** | WCAG 2.1 AA compliant with keyboard nav and screen reader support |
 
 ---
 
-## 🏗️ Architecture
+## Tech Stack
 
-```
+| Domain | Technology |
+|--------|------------|
+| Frontend | React, Vite, Tailwind CSS (optional fallback styling), Lucide Icons |
+| Backend | FastAPI, Python 3.12, Uvicorn, SQLAlchemy |
+| Database | PostgreSQL (Cloud SQL), Redis (Memorystore) |
+| AI & ML | Vertex AI, Gemini 3.1 Flash Lite, Gemma 4 31B |
+| Infrastructure | Google Cloud Platform, Cloud Run, Cloud Build, Terraform |
+| Authentication | Firebase Auth (Google Sign-In), JWT |
+| Testing | Pytest, Playwright, axe-core, k6 |
+
+---
+
+## Architecture
+
+```text
 ┌───────────────────────────────────────┐
 │           Frontend (React + Vite)     │
 │    Mobile-first, a11y, Error Boundary │
@@ -55,7 +69,7 @@ Our approach prioritizes **speed, security, and accessibility**.
                 │ HTTPS
 ┌───────────────▼───────────────────────┐
 │          FastAPI Backend              │
-│   Rate Limiting · Cloud Logging       │
+│   Rate Limiting - Cloud Logging       │
 │   Intent Classification Pipeline      │
 ├───────────────────────────────────────┤
 │   Gemini 3.1      │   Gemma 4 31B     │
@@ -65,15 +79,15 @@ Our approach prioritizes **speed, security, and accessibility**.
 │   Cloud SQL       │   Memorystore     │
 │   (PostgreSQL)    │   (Redis)         │
 ├───────────────────┴───────────────────┤
-│   Cloud Run · Cloud Build · Artifact  │
-│   Registry · Cloud Storage · Cloud    │
-│   Logging · Cloud Monitoring · Armor  │
+│   Cloud Run - Cloud Build - Artifact  │
+│   Registry - Cloud Storage - Cloud    │
+│   Logging - Cloud Monitoring - Armor  │
 └───────────────────────────────────────┘
 ```
 
 ---
 
-## ☁️ Google Services Integration
+## Google Services Integration
 
 | # | Service | Role |
 |---|---------|------|
@@ -82,7 +96,7 @@ Our approach prioritizes **speed, security, and accessibility**.
 | 3 | **Cloud SQL (PostgreSQL)** | Persistent storage — users, sessions, messages, audit |
 | 4 | **Memorystore (Redis)** | Session cache, response cache, rate limit counters |
 | 5 | **Cloud Run** | Serverless container hosting |
-| 6 | **Cloud Build** | CI/CD pipeline: lint → test → build → deploy |
+| 6 | **Cloud Build** | CI/CD pipeline: lint to test to build to deploy |
 | 7 | **Artifact Registry** | Container images with vulnerability scanning |
 | 8 | **Cloud Storage (GCS)** | Voter slip exports, document storage |
 | 9 | **Cloud Logging** | Structured JSON audit logs |
@@ -91,12 +105,12 @@ Our approach prioritizes **speed, security, and accessibility**.
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Python 3.12+
 - Node.js 20+
-- Docker & Docker Compose (optional)
+- Docker and Docker Compose (optional)
 
 ### Local Development
 
@@ -140,9 +154,36 @@ pytest -v
 
 ---
 
-## 📐 Project Structure
+## Test Coverage
 
-```
+| Test Type | Tool Used | Coverage Target | Description |
+|-----------|-----------|-----------------|-------------|
+| **Unit & Integration** | `pytest` | >= 80% Line Coverage | Tests API routes, JWT auth flow, and database schema behavior. Enforced via `pytest-cov` gating. |
+| **End-to-End (E2E)** | `Playwright` | Happy Path | Tests complete user journey from interface load to successful SSE streaming chat interactions. |
+| **Accessibility Audit** | `axe-core` | WCAG 2.1 AA | Programmatic injection of axe-core in Playwright ensuring 0 contrast or semantic tag violations. |
+| **Load Testing** | `k6` | 50 Concurrent | Simulates 50 virtual users executing simultaneous AI queries ensuring <2% error rate and <2000ms response targets. |
+
+---
+
+## Deployment
+
+### Cloud Run (Production)
+The FastAPI backend is fully containerized and hosted on Google Cloud Run in a serverless environment. It dynamically scales up to 20 instances during load spikes and handles strict environment variable injection (e.g., CORS whitelists and JWT secrets) directly from Google Secret Manager to maintain security.
+
+### CI/CD Pipeline
+Code pushes automatically trigger a Google Cloud Build pipeline which:
+1. Lints code via `ruff` and checks types via `mypy`.
+2. Runs unit and integration testing workflows ensuring test coverages are met.
+3. Builds the Docker container, scans it for vulnerabilities in Artifact Registry, and deploys it to Cloud Run only if all previous steps passed.
+
+### Testing Gateways
+Playwright E2E and k6 load tests validate the live production staging to ensure the fault-tolerant SSE streams operate smoothly before final traffic routing.
+
+---
+
+## Project Structure
+
+```text
 Lokmat/
 ├── api/                    # FastAPI backend
 │   ├── config.py           # pydantic-settings configuration
@@ -161,10 +202,12 @@ Lokmat/
 │   │   ├── context/        # Auth, Language providers
 │   │   ├── services/       # Typed API client
 │   │   └── i18n/           # en.json, hi.json
+│   ├── e2e/                # Playwright E2E and Axe tests
 │   └── public/             # Static assets
 ├── tests/                  # pytest test suite
 │   ├── unit/               # Schema, retry, auth tests
-│   └── integration/        # Health, auth flow, chat tests
+│   ├── integration/        # Health, auth flow, chat tests
+│   └── load/               # k6 load testing scripts
 ├── Dockerfile              # Multi-stage production build
 ├── docker-compose.yml      # Local dev stack
 ├── cloudbuild.yaml         # GCP CI/CD pipeline
@@ -175,30 +218,30 @@ Lokmat/
 
 ---
 
-## 🔐 Security
+## Security
 
-- ✅ **Zero secrets in frontend** — all AI calls routed through backend
-- ✅ **JWT authentication** on all protected routes
-- ✅ **Pydantic validation** — malformed requests → 422 before service logic
-- ✅ **Rate limiting** — 60 req/min general, 10 req/min inference
-- ✅ **CORS allowlist** — no wildcard origins
-- ✅ **Content safety** — Gemini safety settings on every call
-- ✅ **Non-root container** — Docker runs as unprivileged user
+- **Zero secrets in frontend** — all AI calls routed through backend
+- **JWT authentication** on all protected routes
+- **Pydantic validation** — malformed requests result in 422 before service logic
+- **Rate limiting** — 60 req/min general, 10 req/min inference
+- **CORS allowlist** — strict enforcement, no wildcard origins
+- **Content safety** — Gemini safety settings on every call
+- **Non-root container** — Docker runs as unprivileged user
 
 ---
 
-## ♿ Accessibility (WCAG 2.1 AA)
+## Accessibility (WCAG 2.1 AA)
 
 - Semantic HTML with proper landmark elements
 - Keyboard-only navigation with visible focus rings
-- Screen reader support (`aria-live`, `aria-label`, `role="log"`)
-- Touch targets ≥ 44×44px for mobile
-- `prefers-reduced-motion` support
+- Screen reader support (aria-live, aria-label, role="log")
+- Touch targets >= 44x44px for mobile
+- prefers-reduced-motion support
 - Error boundaries with recovery actions
 - Skip-to-content link
 
 ---
 
-## 📄 License
+## License
 
 Apache-2.0 — see [LICENSE](./LICENSE)
