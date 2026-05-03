@@ -31,12 +31,12 @@ def _init_firebase() -> None:
         return
 
     try:
-        import firebase_admin
-        from firebase_admin import credentials
-
         # In production: uses Application Default Credentials (ADC)
         # Cloud Run automatically provides the service account credentials
         import os
+
+        import firebase_admin
+        from firebase_admin import credentials
         if os.environ.get("TESTING") == "1":
             raise Exception("Testing mode, skipping ADC")
         cred = credentials.ApplicationDefault()
