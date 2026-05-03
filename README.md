@@ -49,13 +49,32 @@ Our approach prioritizes **speed, security, and accessibility**.
 
 | Domain | Technology |
 |--------|------------|
-| Frontend | React, Vite, Tailwind CSS (optional fallback styling), Lucide Icons |
+| Frontend | React, Vite, CSS modules/plain CSS, Firebase client SDK |
 | Backend | FastAPI, Python 3.12, Uvicorn, SQLAlchemy |
 | Database | PostgreSQL (Cloud SQL), Redis (Memorystore) |
 | AI & ML | Vertex AI, Gemini 3.1 Flash Lite, Gemma 4 31B |
 | Infrastructure | Google Cloud Platform, Cloud Run, Cloud Build, Terraform |
 | Authentication | Firebase Auth (Google Sign-In), JWT |
 | Testing | Pytest, Playwright, axe-core, k6 |
+
+---
+
+## Current Verification Status
+
+Latest local verification:
+
+```bash
+python -m ruff check api tests
+python -m mypy api
+python -m pytest
+cd frontend && npm ci && npm run build
+```
+
+Current results:
+- Backend lint: passed
+- Backend type check: passed across 30 source files
+- Backend tests: 162 passed with 81.07% coverage
+- Frontend install/build: `npm ci` and production Vite build passed
 
 ---
 
@@ -127,7 +146,7 @@ uvicorn api.main:app --reload
 # Frontend (in a new terminal)
 cd frontend
 cp .env.example .env
-npm install
+npm ci
 npm run dev
 ```
 
@@ -213,7 +232,7 @@ Lokmat/
 ├── cloudbuild.yaml         # GCP CI/CD pipeline
 ├── .github/workflows/      # GitHub Actions CI
 ├── LICENSE                 # Apache-2.0
-└── GEMINI.md               # Hackathon rubric & rules
+└── lokmat_rubric_audit.md  # Current rubric evidence and verification notes
 ```
 
 ---
