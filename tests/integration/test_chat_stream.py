@@ -28,8 +28,7 @@ async def test_chat_stream_returns_event_stream_content_type() -> None:
         yield 'data: {"type": "done", "suggestions": [], "model": "gemini-2.5-flash"}\n\n'
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        with patch("api.routers.assistant.classify_intent", return_value="query"), \  # type: ignore
-             patch("api.routers.assistant.generate_chat_stream", return_value=mock_stream()):
+        with patch("api.routers.assistant.classify_intent", return_value="query"), patch("api.routers.assistant.generate_chat_stream", return_value=mock_stream()):
             response = await client.post("/chat/stream", json=payload)
 
     assert response.status_code == 200
@@ -48,8 +47,7 @@ async def test_chat_stream_emits_valid_sse_events() -> None:
         yield 'data: {"type": "done", "suggestions": ["What if NOTA wins?"], "model": "gemini-2.5-flash"}\n\n'
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:  # type: ignore
-        with patch("api.routers.assistant.classify_intent", return_value="query"), \
-             patch("api.routers.assistant.generate_chat_stream", return_value=mock_stream()):
+        with patch("api.routers.assistant.classify_intent", return_value="query"), patch("api.routers.assistant.generate_chat_stream", return_value=mock_stream()):
             response = await client.post("/chat/stream", json=payload)
 
     assert response.status_code == 200

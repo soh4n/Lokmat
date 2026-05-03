@@ -30,7 +30,6 @@ async def test_user_repository() -> None:
     assert res is not None
 
 @pytest.mark.asyncio
-@pytest.mark.asyncio
 async def test_audit_service() -> None:
     with patch("api.services.audit_service.logger") as mock_logger:
         audit.log_chat_event(

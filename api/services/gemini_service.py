@@ -439,7 +439,7 @@ async def generate_chat_stream(
                         contents=contents,
                         config=config,
                     ):
-                        text = chunk.text
+                        text = chunk if isinstance(chunk, str) else chunk.text
                         if text:
                             full_text += text
                             payload = json.dumps({"type": "chunk", "text": text, "model": attempt_model})

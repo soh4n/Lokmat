@@ -38,6 +38,9 @@ def _init_firebase() -> bool:
 
         # In production: use Application Default Credentials (Cloud Run SA)
         # In dev: falls back gracefully if no credentials are set
+        import os
+        if os.environ.get("TESTING") == "1":
+            raise Exception("Testing mode, skipping ADC")
         try:
             cred = credentials.ApplicationDefault()
             _firebase_app = firebase_admin.initialize_app(cred, {
