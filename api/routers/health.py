@@ -9,7 +9,7 @@ from fastapi import APIRouter
 
 from api.config import settings
 from api.schemas.schemas import HealthResponse
-from api.services.gemini_service import check_gemini_connectivity
+from api.services.gemini_service import check_health as check_gemini_health
 
 router = APIRouter(tags=["Health"])
 
@@ -31,8 +31,9 @@ async def health_check() -> HealthResponse:
     except Exception:
         db_ok = False
 
-    # Check Gemini
-    gemini_ok = await check_gemini_connectivity()
+    # Check Gemini (Fast stateless check)
+    gemini_health = await check_gemini_health()
+    gemini_ok = gemini_health["status"] == "ok"
 
     # Check Redis
     try:

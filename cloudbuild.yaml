@@ -9,30 +9,34 @@ steps:
     entrypoint: 'bash'
     args:
       - '-c'
-      - 'pip install --user -r api/requirements.txt pytest pytest-asyncio httpx ruff'
+      - 'pip install -r api/requirements.txt pytest pytest-asyncio httpx respx ruff -t /workspace/.local/lib'
 
   # Step 2: Lint with ruff
   - name: 'python:3.12-slim'
     id: 'lint'
-    entrypoint: 'python'
-    args: ['-m', 'ruff', 'check', 'api/', '--output-format=github']
+    entrypoint: 'bash'
+    args: ['-c', 'python -m ruff check api/ --output-format=github']
+    env:
+      - 'PYTHONPATH=/workspace/.local/lib'
     waitFor: ['install-deps']
 
   # Step 3: Run unit tests
   - name: 'python:3.12-slim'
     id: 'unit-tests'
-    entrypoint: 'python'
-    args: ['-m', 'pytest', 'tests/unit/', '-v', '--tb=short']
+    entrypoint: 'bash'
+    args: ['-c', 'python -m pytest tests/unit/ -v --tb=short']
     env:
+      - 'PYTHONPATH=/workspace/.local/lib'
       - 'GEMINI_API_KEY=test-key'
     waitFor: ['install-deps']
 
   # Step 4: Run integration tests
   - name: 'python:3.12-slim'
     id: 'integration-tests'
-    entrypoint: 'python'
-    args: ['-m', 'pytest', 'tests/integration/', '-v', '--tb=short']
+    entrypoint: 'bash'
+    args: ['-c', 'python -m pytest tests/integration/ -v --tb=short']
     env:
+      - 'PYTHONPATH=/workspace/.local/lib'
       - 'GEMINI_API_KEY=test-key'
     waitFor: ['unit-tests']
 
@@ -79,7 +83,8 @@ steps:
       - '--service-account=lokmat-api@lokmat-495121.iam.gserviceaccount.com'
       - '--set-secrets=GEMINI_API_KEY=lokmat-gemini-api-key:latest,JWT_SECRET=lokmat-jwt-secret:latest,DATABASE_URL=lokmat-db-password:latest'
       - '--vpc-connector=lokmat-connector'
-      - '--set-env-vars=GCP_PROJECT_ID=lokmat-495121,FIREBASE_AUTH_ENABLED=true,APP_NAME=LokMat API,CORS_ORIGINS=["https://lokmat.web.app"]'
+      - '--vpc-egress=all-traffic'
+      - '--set-env-vars=GCP_PROJECT_ID=lokmat-495121,FIREBASE_AUTH_ENABLED=true,APP_NAME=LokMat API,CORS_ORIGINS=["https://lokmat.web.app","http://localhost:5173","http://localhost:3000"]'
     waitFor: ['push-sha']
 
 images:

@@ -26,7 +26,7 @@ from api.utils.retry import with_exponential_backoff
 logger = logging.getLogger(__name__)
 
 # Election-domain system prompt — politically neutral, language-aware
-SYSTEM_PROMPT = """You are LokMat AI Guide, an expert election assistant for Indian voters.
+SYSTEM_PROMPT = """You are VoteSathi AI, an expert election assistant for Indian voters.
 
 Rules:
 - Answer ONLY election-related queries: voting process, candidates, booth info, documents, voter rights, manifesto, timelines, EVM, NOTA, postal ballots, etc.
@@ -59,9 +59,21 @@ User message: {message}"""
 
 # Complexity keywords that warrant escalation to Pro model
 _PRO_KEYWORDS = {
-    "compare", "analyse", "analyze", "explain in detail", "comprehensive",
-    "history of", "difference between", "pros and cons", "summarise", "summarize",
-    "impact of", "implications", "constitutional", "amendment", "legal",
+    "compare",
+    "analyse",
+    "analyze",
+    "explain in detail",
+    "comprehensive",
+    "history of",
+    "difference between",
+    "pros and cons",
+    "summarise",
+    "summarize",
+    "impact of",
+    "implications",
+    "constitutional",
+    "amendment",
+    "legal",
 }
 
 _SAFETY_SETTINGS = [
@@ -74,7 +86,34 @@ _SAFETY_SETTINGS = [
 
 def _get_client() -> genai.Client:
     """Get a configured Gemini client."""
-    return genai.Client(api_key=settings.gemini_api_key)
+    return genai.Client(api_key=settings.clean_gemini_api_key)
+
+
+# Fallback model chain — tried in order when quota is exhausted.
+# Gemma 3 models: 30 RPM / 14,400 RPD free quota — excellent safety net.
+_FALLBACK_MODELS = [
+    "gemini-3.1-flash-lite-preview",
+    "gemma-4-31b-it",
+    "gemma-4-26b-a4b-it",  # Optional: The new MoE model
+    "gemini-3-flash-preview",  # Updated from 2.0
+    "gemini-2.5-flash-lite",  # Updated from 2.0
+    "gemma-3-27b-it",
+    "gemma-3-12b-it",
+    "gemma-3-4b-it",
+    "gemma-3-1b-it",
+]
+
+# Gemma models don't support system_instruction — inject via content instead.
+_GEMMA_MODELS = frozenset(
+    {
+        "gemma-4-31b-it",
+        "gemma-4-26b-a4b-it",
+        "gemma-3-27b-it",
+        "gemma-3-12b-it",
+        "gemma-3-4b-it",
+        "gemma-3-1b-it",
+    }
+)
 
 
 def _select_model(user_message: str) -> tuple[str, str]:
@@ -82,8 +121,8 @@ def _select_model(user_message: str) -> tuple[str, str]:
     Route to Flash (default) or Pro (complex) based on message complexity.
 
     Decision criteria per GEMINI.md:
-    - Messages > 200 chars with complexity keywords → Pro
-    - All other queries → Flash
+    - Messages > 200 chars with complexity keywords -> Pro
+    - All other queries -> Flash
 
     Returns:
         Tuple of (model_id, reason) for logging.
@@ -102,6 +141,135 @@ def _select_model(user_message: str) -> tuple[str, str]:
     return settings.gemini_model_flash, "default"
 
 
+async def _generate_with_fallback(
+    client: genai.Client,
+    primary_model: str,
+    contents: list,
+    config: types.GenerateContentConfig,
+    history: list | None = None,
+) -> tuple[object, str]:
+    """
+    Try primary model, fall back through chain on quota exhaustion (429).
+
+    Automatically handles Gemma models (no system_instruction support) by
+    rebuilding contents with the system prompt injected as a conversation turn.
+
+    Returns:
+        Tuple of (response, model_used).
+
+    Raises:
+        Exception: If all models in the chain are exhausted.
+    """
+    models_to_try = [primary_model] + [m for m in _FALLBACK_MODELS if m != primary_model]
+
+    # Safely extract system_instruction for Gemma injection
+    sys_instruction = ""
+    if getattr(config, "system_instruction", None):
+        if isinstance(config.system_instruction, str):
+            sys_instruction = config.system_instruction
+        else:
+            sys_instruction = config.system_instruction.parts[0].text
+
+    last_exc = None
+    for model_id in models_to_try:
+        try:
+            # Gemma doesn't support system_instruction — inject via contents
+            if model_id in _GEMMA_MODELS and sys_instruction:
+                gemma_contents = _build_gemma_contents(
+                    sys_instruction,
+                    "",  # already in contents; extract last user message
+                    history or [],
+                )
+                # Extract actual user message from last content item
+                last_user = next((c.parts[0].text for c in reversed(contents) if c.role == "user"), "")
+                # Rebuild properly with the last user message
+                if last_user:
+                    gemma_contents = _build_gemma_contents(sys_instruction, last_user, history or [])
+                gemma_config = types.GenerateContentConfig(
+                    max_output_tokens=getattr(config, "max_output_tokens", 1024),
+                    temperature=getattr(config, "temperature", 0.7),
+                    safety_settings=getattr(config, "safety_settings", None),
+                )
+                response = await client.aio.models.generate_content(
+                    model=f"models/{model_id}",
+                    contents=gemma_contents,
+                    config=gemma_config,
+                )
+            else:
+                response = await client.aio.models.generate_content(
+                    model=f"models/{model_id}",
+                    contents=contents,
+                    config=config,
+                )
+
+            if model_id != primary_model:
+                logger.warning(
+                    "Used fallback model due to quota",
+                    extra={"primary": primary_model, "used": model_id},
+                )
+            return response, model_id
+
+        except Exception as exc:
+            err_str = str(exc)
+            # Fall back on quota issues or if the model isn't found/accessible
+            if (
+                "429" in err_str
+                or "RESOURCE_EXHAUSTED" in err_str
+                or "404" in err_str
+                or "NOT_FOUND" in err_str
+                or "403" in err_str
+            ):
+                next_model = (
+                    models_to_try[models_to_try.index(model_id) + 1] if model_id != models_to_try[-1] else "none"
+                )
+                logger.warning(
+                    "Model failed or quota exhausted, trying fallback",
+                    extra={"model": model_id, "next": next_model, "error": err_str},
+                )
+                last_exc = exc
+                continue
+            raise  # Other non-recoverable errors bubble up immediately
+
+    raise last_exc  # All models exhausted
+
+
+def _build_gemma_contents(
+    system_prompt: str,
+    user_message: str,
+    history: list[dict],  # type: ignore[type-arg]
+) -> list[types.Content]:
+    """
+    Build content list for Gemma models, which don't support system_instruction.
+
+    Injects the system prompt as the first user turn with a clear delimiter,
+    then appends conversation history and the sandboxed user message.
+    """
+    contents: list[types.Content] = []
+
+    # Prepend system prompt as a leading user message
+    sys_turn = f"[SYSTEM]\n{system_prompt}\n[/SYSTEM]\n\nUnderstood. I will follow these instructions."
+    contents.append(types.Content(role="user", parts=[types.Part(text=sys_turn)]))
+    contents.append(
+        types.Content(
+            role="model", parts=[types.Part(text="Understood. I am VoteSathi AI and will follow all instructions.")]
+        )
+    )
+
+    # Get rolling window and ensure it starts with a user message
+    sliced_history = history[-10:]
+    if sliced_history and sliced_history[0]["role"] == "assistant":
+        sliced_history = sliced_history[1:]
+
+    for msg in sliced_history:
+        role = "model" if msg["role"] == "assistant" else "user"
+        contents.append(types.Content(role=role, parts=[types.Part(text=msg["content"])]))
+
+    sandboxed = f"[USER_MESSAGE]\n{user_message}\n[/USER_MESSAGE]"
+    contents.append(types.Content(role="user", parts=[types.Part(text=sandboxed)]))
+
+    return contents
+
+
 def _build_contents(
     user_message: str,
     history: list[dict],  # type: ignore[type-arg]
@@ -109,8 +277,12 @@ def _build_contents(
     """Build Gemini content list from history + sandboxed user message."""
     contents: list[types.Content] = []
 
-    # Rolling window of last 10 turns
-    for msg in history[-10:]:
+    # Get rolling window and ensure it starts with a user message
+    sliced_history = history[-10:]
+    if sliced_history and sliced_history[0]["role"] == "assistant":
+        sliced_history = sliced_history[1:]
+
+    for msg in sliced_history:
         role = "model" if msg["role"] == "assistant" else "user"
         contents.append(types.Content(role=role, parts=[types.Part(text=msg["content"])]))
 
@@ -133,13 +305,12 @@ async def classify_intent(user_message: str) -> str:
         Intent classification string: query, action, clarify, or out_of_scope.
     """
     client = _get_client()
-    response = client.models.generate_content(
-        model=f"models/{settings.gemini_model_flash}",
+    config = types.GenerateContentConfig(max_output_tokens=20, temperature=0.1)
+    response, _ = await _generate_with_fallback(
+        client,
+        primary_model=settings.gemini_model_flash,
         contents=INTENT_PROMPT.format(message=user_message),
-        config=types.GenerateContentConfig(
-            max_output_tokens=20,
-            temperature=0.1,
-        ),
+        config=config,
     )
 
     raw = response.text
@@ -175,17 +346,14 @@ async def generate_chat_response(
     client = _get_client()
     model_id, route_reason = _select_model(user_message)
     contents = _build_contents(user_message, history)
-
-    response = client.models.generate_content(
-        model=f"models/{model_id}",
-        contents=contents,
-        config=types.GenerateContentConfig(
-            system_instruction=SYSTEM_PROMPT,
-            max_output_tokens=settings.gemini_max_output_tokens,
-            temperature=settings.gemini_temperature,
-            safety_settings=_SAFETY_SETTINGS,
-        ),
+    config = types.GenerateContentConfig(
+        system_instruction=SYSTEM_PROMPT,
+        max_output_tokens=settings.gemini_max_output_tokens,
+        temperature=settings.gemini_temperature,
+        safety_settings=_SAFETY_SETTINGS,
     )
+
+    response, model_id = await _generate_with_fallback(client, model_id, contents, config, history=history)
 
     response_text = response.text or "I'm sorry, I couldn't generate a response. Please try again."
 
@@ -232,6 +400,12 @@ async def generate_chat_stream(
     client = _get_client()
     model_id, route_reason = _select_model(user_message)
     contents = _build_contents(user_message, history)
+    config = types.GenerateContentConfig(
+        system_instruction=SYSTEM_PROMPT,
+        max_output_tokens=settings.gemini_max_output_tokens,
+        temperature=settings.gemini_temperature,
+        safety_settings=_SAFETY_SETTINGS,
+    )
 
     logger.info(
         "Starting streaming chat",
@@ -239,34 +413,65 @@ async def generate_chat_stream(
     )
 
     try:
-        # Stream=True — yield tokens as they arrive
-        with client.models.generate_content_stream(
-            model=f"models/{model_id}",
-            contents=contents,
-            config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_PROMPT,
-                max_output_tokens=settings.gemini_max_output_tokens,
-                temperature=settings.gemini_temperature,
-                safety_settings=_SAFETY_SETTINGS,
-            ),
-        ) as stream:
-            full_text = ""
-            for chunk in stream:
-                text = chunk.text
-                if text:
-                    full_text += text
-                    # SSE: data: <json payload>\n\n
-                    payload = json.dumps({"type": "chunk", "text": text, "model": model_id})
+        full_text = ""
+
+        # Gemma models don't support streaming — fall back to non-streaming + SSE simulation
+        if model_id in _GEMMA_MODELS:
+            response, model_id = await _generate_with_fallback(client, model_id, contents, config, history=history)
+            full_text = response.text or ""
+            # Stream simulated chunks for UX consistency (word-by-word)
+            words = full_text.split()
+            chunk_size = 5  # 5 words per SSE chunk
+            for i in range(0, len(words), chunk_size):
+                chunk = " ".join(words[i : i + chunk_size]) + (" " if i + chunk_size < len(words) else "")
+                payload = json.dumps({"type": "chunk", "text": chunk, "model": model_id})
+                yield f"data: {payload}\n\n"
+        else:
+            # Attempt primary model with streaming
+            stream_ok = False
+            models_to_try = [model_id] + [m for m in _FALLBACK_MODELS if m not in _GEMMA_MODELS and m != model_id]
+            for attempt_model in models_to_try:
+                try:
+                    async for chunk in await client.aio.models.generate_content_stream(
+                        model=f"models/{attempt_model}",
+                        contents=contents,
+                        config=config,
+                    ):
+                        text = chunk.text
+                        if text:
+                            full_text += text
+                            payload = json.dumps({"type": "chunk", "text": text, "model": attempt_model})
+                            yield f"data: {payload}\n\n"
+                    model_id = attempt_model
+                    stream_ok = True
+                    break
+                except Exception as exc:
+                    err_str = str(exc)
+                    if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
+                        logger.warning("Stream quota exhausted", extra={"model": attempt_model})
+                        continue
+                    raise
+
+            if not stream_ok:
+                # All streaming models exhausted — try Gemma fallback non-streaming
+                response, model_id = await _generate_with_fallback(client, model_id, contents, config, history=history)
+                full_text = response.text or ""
+                words = full_text.split()
+                for i in range(0, len(words), 5):
+                    chunk = " ".join(words[i : i + 5]) + (" " if i + 5 < len(words) else "")
+                    payload = json.dumps({"type": "chunk", "text": chunk, "model": model_id})
                     yield f"data: {payload}\n\n"
 
-            # Extract suggestions from full text and send as final event
-            suggestions = _extract_suggestions(full_text)
-            done_payload = json.dumps({
+        # Send suggestions and done signal
+        suggestions = _extract_suggestions(full_text)
+        done_payload = json.dumps(
+            {
                 "type": "done",
                 "suggestions": suggestions,
                 "model": model_id,
-            })
-            yield f"data: {done_payload}\n\n"
+            }
+        )
+        yield f"data: {done_payload}\n\n"
 
     except Exception as e:
         logger.error("Streaming error", extra={"error": str(e), "model": model_id})
@@ -274,24 +479,9 @@ async def generate_chat_stream(
         yield f"data: {error_payload}\n\n"
 
 
-async def check_gemini_connectivity() -> bool:
-    """
-    Check if Gemini API is reachable. Used by health endpoint.
-
-    Returns:
-        True if API responds, False otherwise.
-    """
-    try:
-        client = _get_client()
-        response = client.models.generate_content(
-            model=f"models/{settings.gemini_model_flash}",
-            contents="Say OK",
-            config=types.GenerateContentConfig(max_output_tokens=5),
-        )
-        return bool(response.text)
-    except Exception as e:
-        logger.error(f"Gemini connectivity check failed: {e}")
-        return False
+async def check_health() -> dict:
+    """Fast, stateless liveness probe for infrastructure."""
+    return {"status": "ok", "service": "LokMat API"}
 
 
 def _extract_suggestions(text: str) -> list[str]:
@@ -301,7 +491,10 @@ def _extract_suggestions(text: str) -> list[str]:
     capture = False
     for line in lines:
         stripped = line.strip()
-        if any(kw in stripped.lower() for kw in ["follow-up", "you might also ask", "you may also want to ask", "आप यह भी पूछ"]):
+        if any(
+            kw in stripped.lower()
+            for kw in ["follow-up", "you might also ask", "you may also want to ask", "आप यह भी पूछ"]
+        ):
             capture = True
             continue
         if capture and stripped.startswith(("-", "•", "1", "2", "3")):
@@ -310,4 +503,3 @@ def _extract_suggestions(text: str) -> list[str]:
                 suggestions.append(clean)
 
     return suggestions[:3]
-

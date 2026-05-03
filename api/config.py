@@ -25,7 +25,12 @@ class Settings(BaseSettings):
     # Server
     host: str = "0.0.0.0"
     port: int = 8000
-    cors_origins: list[str] = ["http://localhost:5173", "http://localhost:3000"]
+    cors_origins: list[str] = [
+        "http://localhost:5173", 
+        "http://localhost:3000",
+        "https://lokmat-495121.web.app",
+        "https://lokmat-495121.firebaseapp.com"
+    ]
 
     # GCP Project
     gcp_project_id: str = "lokmat-495121"
@@ -40,7 +45,7 @@ class Settings(BaseSettings):
 
     # Gemini API
     gemini_api_key: str = ""
-    gemini_model_flash: str = "gemini-2.5-flash"
+    gemini_model_flash: str = "gemini-3.1-flash-lite"
     gemini_model_pro: str = "gemini-2.5-pro"
     gemini_max_output_tokens: int = 1024
     gemini_temperature: float = 0.7
@@ -62,6 +67,11 @@ class Settings(BaseSettings):
     # Token Budget (per GEMINI.md efficiency rules)
     max_context_tokens: int = 8_000
     warn_threshold_tokens: int = 50_000
+
+    @property
+    def clean_gemini_api_key(self) -> str:
+        """Strip trailing newlines often present in Secret Manager payloads."""
+        return self.gemini_api_key.strip()
 
 
 settings = Settings()

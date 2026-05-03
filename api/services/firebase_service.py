@@ -24,11 +24,12 @@ def _init_firebase() -> bool:
     Returns True if successfully initialised, False if SDK not configured.
     Designed to fail gracefully so local dev (JWT mode) still works.
     """
-    global _firebase_app, _firebase_available  # noqa: PLW0603
+    global _firebase_app, _firebase_available
 
     try:
         import firebase_admin
         from firebase_admin import credentials
+
         from api.config import settings
 
         if firebase_admin._apps:  # Already initialised

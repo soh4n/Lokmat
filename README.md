@@ -58,9 +58,9 @@ Our approach prioritizes **speed, security, and accessibility**.
 │   Rate Limiting · Cloud Logging       │
 │   Intent Classification Pipeline      │
 ├───────────────────────────────────────┤
-│   Gemini Flash    │   Gemini Pro      │
-│   (Classification │   (Complex        │
-│    + Chat)        │    Reasoning)     │
+│   Gemini 3.1      │   Gemma 4 31B     │
+│   Flash Lite      │   (High           │
+│   (Primary)       │   Availability)   │
 ├───────────────────┼───────────────────┤
 │   Cloud SQL       │   Memorystore     │
 │   (PostgreSQL)    │   (Redis)         │
@@ -77,8 +77,8 @@ Our approach prioritizes **speed, security, and accessibility**.
 
 | # | Service | Role |
 |---|---------|------|
-| 1 | **Vertex AI — Gemini Flash** | Intent classification, real-time chat, context summarisation |
-| 2 | **Vertex AI — Gemini Pro** | Complex multi-step reasoning |
+| 1 | **Vertex AI — Gemini 3.1 Flash Lite** | Primary model for real-time chat and intent classification |
+| 2 | **Vertex AI — Gemma 4 31B** | Fallback model ensuring high availability if quota is exceeded |
 | 3 | **Cloud SQL (PostgreSQL)** | Persistent storage — users, sessions, messages, audit |
 | 4 | **Memorystore (Redis)** | Session cache, response cache, rate limit counters |
 | 5 | **Cloud Run** | Serverless container hosting |

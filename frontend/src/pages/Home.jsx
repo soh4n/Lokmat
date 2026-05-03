@@ -268,10 +268,6 @@ export default function Home() {
                     <span className="material-symbols-outlined">delete_sweep</span>
                   </button>
                 )}
-                <div className="votesathi-badge">
-                  <span className="live-dot" style={{ width: '6px', height: '6px' }} />
-                  <span>Gemini 2.5</span>
-                </div>
               </div>
             </div>
 
