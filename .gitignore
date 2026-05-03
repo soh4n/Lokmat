@@ -1,0 +1,76 @@
+# ============================================================================
+# LokMat — .gitignore
+# ============================================================================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+*.whl
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# --- Environment / Secrets ---
+.env
+*.env.local
+*.env.production
+api/.env
+
+# --- IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- Node.js / Frontend ---
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# --- Testing ---
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+playwright-report/
+test-results/
+
+# --- Database ---
+*.db
+*.sqlite
+*.sqlite3
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Terraform ---
+infra/.terraform/
+infra/.terraform.lock.hcl
+infra/*.tfstate
+infra/*.tfstate.backup
+infra/*.tfplan
+terraform.exe
+infra/terraform.exe
+
+# --- Docker ---
+docker-compose.override.yml
+
+# --- Logs ---
+*.log
+logs/
+
+# --- Gemini CLI ---
+.gemini/
+
+# --- Design ---
+stitch_app_design_implementation/

@@ -1,0 +1,258 @@
+/* ===== My Vote Page ===== */
+
+.voter-slip-card {
+  background: var(--surface-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.voter-slip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.voter-slip-title {
+  font-family: var(--font-display-en);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin-bottom: 4px;
+}
+
+.voter-slip-logo {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.voter-slip-logo img {
+  object-fit: contain;
+  border-radius: var(--radius-lg);
+}
+
+.voter-slip-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.voter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.voter-field .text-label {
+  color: var(--on-surface-variant);
+}
+
+.voter-field strong {
+  font-size: 15px;
+  color: var(--on-surface);
+}
+
+.voter-slip-date {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 20px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-light);
+}
+
+.voter-slip-date strong {
+  font-size: 16px;
+}
+
+.voter-slip-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.voter-slip-actions .btn {
+  flex: 1;
+}
+
+/* Booth Section */
+.booth-section {
+  background: var(--surface-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+}
+
+.section-title {
+  font-family: var(--font-display-en);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin-bottom: 16px;
+}
+
+.booth-map-placeholder {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(135deg, var(--surface-container-low), var(--surface-container));
+  border-radius: var(--radius-lg);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.booth-map-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 8px;
+}
+
+.booth-map-overlay p {
+  font-size: 13px;
+  color: var(--on-surface-variant);
+}
+
+.booth-walk-badge {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: var(--surface-white);
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: var(--shadow-md);
+}
+
+.booth-info {
+  margin-bottom: 16px;
+}
+
+.booth-info h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.booth-info p {
+  font-size: 14px;
+  color: var(--on-surface-variant);
+  line-height: 1.5;
+}
+
+.booth-queue-status {
+  background: var(--green-light);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.queue-status-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.queue-status-body {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.queue-time {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--on-surface);
+}
+
+.queue-dot {
+  width: 10px;
+  height: 10px;
+  background: var(--green-india);
+  border-radius: 50%;
+  margin-left: auto;
+}
+
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Incomplete Profile */
+.myvote-incomplete {
+  background: var(--surface-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: 48px 32px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: 40px;
+}
+
+.myvote-incomplete h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--on-surface);
+}
+
+.myvote-incomplete p {
+  font-size: 15px;
+  color: var(--on-surface-variant);
+  max-width: 400px;
+  line-height: 1.6;
+}
+
+/* Extra Grid */
+.voter-slip-extra-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+/* Edit link */
+.voter-slip-edit {
+  text-align: center;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-light);
+}
+
+.edit-profile-link {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--saffron);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.edit-profile-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .voter-slip-actions {
+    flex-direction: column;
+  }
+  .voter-slip-grid,
+  .voter-slip-extra-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+}
+

@@ -1,0 +1,92 @@
+# LokMat — Cloud Build CI/CD Pipeline
+# Per GEMINI.md: lint → test → build → push → deploy on merge to main
+# Project: lokmat-495121
+
+steps:
+  # Step 1: Install Python dependencies
+  - name: 'python:3.12-slim'
+    id: 'install-deps'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - 'pip install --user -r api/requirements.txt pytest pytest-asyncio httpx ruff'
+
+  # Step 2: Lint with ruff
+  - name: 'python:3.12-slim'
+    id: 'lint'
+    entrypoint: 'python'
+    args: ['-m', 'ruff', 'check', 'api/', '--output-format=github']
+    waitFor: ['install-deps']
+
+  # Step 3: Run unit tests
+  - name: 'python:3.12-slim'
+    id: 'unit-tests'
+    entrypoint: 'python'
+    args: ['-m', 'pytest', 'tests/unit/', '-v', '--tb=short']
+    env:
+      - 'GEMINI_API_KEY=test-key'
+    waitFor: ['install-deps']
+
+  # Step 4: Run integration tests
+  - name: 'python:3.12-slim'
+    id: 'integration-tests'
+    entrypoint: 'python'
+    args: ['-m', 'pytest', 'tests/integration/', '-v', '--tb=short']
+    env:
+      - 'GEMINI_API_KEY=test-key'
+    waitFor: ['unit-tests']
+
+  # Step 5: Build container image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/lokmat-495121/lokmat/api:$COMMIT_SHA'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/lokmat-495121/lokmat/api:latest'
+      - '.'
+    waitFor: ['lint', 'integration-tests']
+
+  # Step 6: Push to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-sha'
+    args: ['push', 'us-central1-docker.pkg.dev/lokmat-495121/lokmat/api:$COMMIT_SHA']
+    waitFor: ['build']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-latest'
+    args: ['push', 'us-central1-docker.pkg.dev/lokmat-495121/lokmat/api:latest']
+    waitFor: ['build']
+
+  # Step 7: Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'lokmat-api'
+      - '--image=us-central1-docker.pkg.dev/lokmat-495121/lokmat/api:$COMMIT_SHA'
+      - '--region=us-central1'
+      - '--platform=managed'
+      - '--min-instances=1'
+      - '--max-instances=20'
+      - '--memory=512Mi'
+      - '--cpu=1'
+      - '--port=8000'
+      - '--allow-unauthenticated'
+      - '--service-account=lokmat-api@lokmat-495121.iam.gserviceaccount.com'
+      - '--set-secrets=GEMINI_API_KEY=lokmat-gemini-api-key:latest,JWT_SECRET=lokmat-jwt-secret:latest,DATABASE_URL=lokmat-db-password:latest'
+      - '--vpc-connector=lokmat-connector'
+      - '--set-env-vars=GCP_PROJECT_ID=lokmat-495121,FIREBASE_AUTH_ENABLED=true,APP_NAME=LokMat API,CORS_ORIGINS=["https://lokmat.web.app"]'
+    waitFor: ['push-sha']
+
+images:
+  - 'us-central1-docker.pkg.dev/lokmat-495121/lokmat/api:$COMMIT_SHA'
+  - 'us-central1-docker.pkg.dev/lokmat-495121/lokmat/api:latest'
+
+tags: ['lokmat', 'promptwars']
+
+options:
+  logging: CLOUD_LOGGING_ONLY

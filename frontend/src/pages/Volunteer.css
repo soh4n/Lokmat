@@ -1,0 +1,106 @@
+/* ===== Volunteer Page ===== */
+
+.volunteer-hero {
+  background: linear-gradient(135deg, var(--saffron) 0%, var(--saffron-dark) 100%);
+  border-radius: var(--radius-xl);
+  padding: 40px 30px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: var(--stack-lg);
+}
+
+.volunteer-hero::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 180px;
+  height: 180px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+}
+
+.volunteer-hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.volunteer-hero-title {
+  font-family: var(--font-display-en);
+  font-size: clamp(24px, 5vw, 34px);
+  font-weight: 700;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.volunteer-hero-title-hi {
+  font-family: var(--font-display-hi);
+  font-size: clamp(22px, 4.5vw, 30px);
+  font-weight: 700;
+  margin-bottom: 16px;
+  opacity: 0.9;
+}
+
+.volunteer-hero-desc {
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+  opacity: 0.9;
+  max-width: 600px;
+}
+
+.volunteer-hero .btn-primary {
+  background: #fff;
+  color: var(--saffron);
+}
+
+.volunteer-hero .btn-primary:hover {
+  background: var(--saffron-light);
+}
+
+/* Roles */
+.volunteer-roles-title-hi {
+  font-family: var(--font-display-hi);
+  font-size: 20px;
+  color: var(--saffron);
+  margin-bottom: 6px;
+}
+
+.volunteer-roles-desc {
+  font-size: 14px;
+  color: var(--on-surface-variant);
+  margin-bottom: var(--stack-md);
+  line-height: 1.5;
+}
+
+.volunteer-roles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.volunteer-role-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px 20px;
+}
+
+.volunteer-role-card h3 {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.volunteer-role-hi {
+  font-family: var(--font-body-hi);
+  font-size: 14px;
+  color: var(--saffron);
+}
+
+.volunteer-role-desc {
+  font-size: 14px;
+  color: var(--on-surface-variant);
+  line-height: 1.5;
+  flex: 1;
+}

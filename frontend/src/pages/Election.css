@@ -1,0 +1,278 @@
+/* ===== Election Page ===== */
+
+.section-subtitle {
+  font-size: 14px;
+  color: var(--on-surface-variant);
+  margin-bottom: var(--stack-md);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.election-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: var(--stack-md);
+  overflow-x: auto;
+}
+
+.election-tab {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border: none;
+  background: none;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all var(--duration-fast) var(--ease-out);
+  white-space: nowrap;
+}
+
+.election-tab.active {
+  color: var(--saffron);
+  border-bottom-color: var(--saffron);
+  font-weight: 600;
+}
+
+.election-tab:hover:not(.active) {
+  color: var(--on-surface);
+}
+
+/* ===== Upcoming Elections Timeline ===== */
+.upcoming-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.upcoming-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.upcoming-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  padding-left: 24px;
+}
+
+.upcoming-timeline::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border-light);
+}
+
+.timeline-item {
+  display: flex;
+  gap: 16px;
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -24px;
+  top: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface-white);
+  border: 2px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.timeline-item.completed .timeline-dot {
+  border-color: var(--green-india);
+  background: #e8f5e9;
+}
+
+.timeline-item.upcoming .timeline-dot {
+  border-color: var(--saffron);
+  background: var(--saffron-lighter);
+}
+
+.timeline-content {
+  background: var(--surface-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  flex: 1;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.timeline-content:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+.timeline-item.completed .timeline-content {
+  opacity: 0.75;
+}
+
+.timeline-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.timeline-year {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.timeline-content h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--on-surface);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.timeline-details {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--on-surface-variant);
+}
+
+.timeline-details span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge-saffron {
+  background: var(--saffron-lighter);
+  color: var(--saffron);
+  border: 1px solid var(--saffron-light);
+}
+
+.badge-outline {
+  background: transparent;
+  color: var(--on-surface-variant);
+  border: 1px solid var(--border-light);
+  font-size: 11px;
+}
+
+/* ===== Learn Section ===== */
+.learn-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.learn-card {
+  background: var(--surface-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+}
+
+.learn-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.learn-card h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin-bottom: 10px;
+}
+
+.learn-card p {
+  font-size: 14px;
+  color: var(--on-surface-variant);
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+.learn-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+.learn-stat {
+  background: var(--surface-container-low);
+  border-radius: var(--radius);
+  padding: 14px 12px;
+  text-align: center;
+}
+
+.learn-stat strong {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 2px;
+}
+
+.learn-stat span {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.learn-card-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #e8f5e9;
+  border-color: #c8e6c9;
+}
+
+.learn-card-tip p {
+  margin-bottom: 0;
+  font-size: 13px;
+}
+
+/* ===== Candidates ===== */
+.candidates-list { display: flex; flex-direction: column; gap: 16px; }
+.candidate-card { padding: 20px; }
+.candidate-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; }
+.candidate-avatar { width: 56px; height: 56px; border-radius: var(--radius-lg); background: var(--surface-container); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--on-surface-variant); }
+.candidate-info { flex: 1; }
+.candidate-info h3 { font-size: 18px; font-weight: 600; }
+.candidate-info p { font-size: 14px; }
+.candidate-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.candidate-stat { background: var(--surface-container-low); border-radius: var(--radius); padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.candidate-stat strong { font-size: 15px; display: flex; align-items: center; gap: 4px; }
+
+/* ===== Manifesto ===== */
+.manifesto-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: var(--stack-md); }
+.manifesto-header h2 { font-size: 20px; font-weight: 700; }
+.manifesto-topics { display: flex; flex-direction: column; gap: 20px; }
+.manifesto-topic-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.manifesto-topic-header h3 { font-size: 16px; font-weight: 600; }
+.manifesto-topic-header .material-symbols-outlined { color: var(--navy); }
+.manifesto-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.manifesto-party-card { background: var(--surface-container-low); border-left: 3px solid var(--navy); border-radius: var(--radius); padding: 12px 14px; }
+.manifesto-party-card .badge { margin-bottom: 6px; }
+.manifesto-party-card p { font-size: 13px; color: var(--on-surface-variant); line-height: 1.5; }
+
+@media (max-width: 480px) {
+  .manifesto-compare { grid-template-columns: 1fr; }
+  .learn-stats { grid-template-columns: 1fr 1fr 1fr; }
+}
