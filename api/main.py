@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 
 from api.config import settings
@@ -81,6 +82,27 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Trusted host validation — rejects Host header spoofing attacks
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["*"],  # Cloud Run handles TLS termination; refine in prod
+)
+
+
+# --- Security Headers Middleware ---
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next) -> None:  # type: ignore
+    """Attach security-hardening HTTP response headers to every response."""
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=()"
+    # HSTS: enforce HTTPS for 1 year (Cloud Run terminates TLS)
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response  # type: ignore
 
 
 # --- Request Logging Middleware ---

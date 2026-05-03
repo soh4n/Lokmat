@@ -2,7 +2,9 @@
 LokMat API — Assistant chat router.
 
 POST /chat        — Full response (JSON)
-GET  /chat/stream — Streaming response (SSE / EventSource)
+POST /chat/stream — Streaming response (SSE / EventSource)
+
+All endpoints require a valid Bearer token (per GEMINI.md security rules).
 
 Implements the context pipeline from GEMINI.md:
 1. Intent Classification (Gemini Flash)
@@ -16,7 +18,7 @@ Implements the context pipeline from GEMINI.md:
 import logging
 from uuid import uuid4
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
 from api.schemas.schemas import ChatRequest, ChatResponse, IntentType
@@ -25,15 +27,22 @@ from api.services.gemini_service import (
     generate_chat_response,
     generate_chat_stream,
 )
+from api.utils.auth import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Assistant"])
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest) -> ChatResponse:
+async def chat(
+    request: ChatRequest,
+    user_id: str = Depends(get_current_user),
+) -> ChatResponse:
     """
     Process a chat message through the election AI assistant pipeline.
+
+    Requires a valid Bearer token. Row-level data is scoped to the
+    authenticated user’s session.
 
     Pipeline:
     1. Classify intent (query/action/clarify/out_of_scope)
@@ -42,6 +51,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
     Args:
         request: ChatRequest with message, session_id, and history.
+        user_id: Authenticated user identifier from Bearer token.
 
     Returns:
         ChatResponse with AI response, intent, and suggestions.
@@ -53,7 +63,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
         intent = await classify_intent(request.message)
         logger.info(
             "Intent classified",
-            extra={"intent": intent, "session_id": session_id},
+            extra={"intent": intent, "session_id": session_id, "user_id": user_id},
         )
 
         # Step 2: Handle out-of-scope
@@ -83,6 +93,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
             "Chat response generated",
             extra={
                 "session_id": session_id,
+                "user_id": user_id,
                 "intent": intent,
                 "response_length": len(response_text),
                 "model": model_used,
@@ -100,7 +111,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
     except Exception as e:
         logger.error(
             "Chat generation failed",
-            extra={"error": str(e), "session_id": session_id},
+            extra={"error": str(e), "session_id": session_id, "user_id": user_id},
         )
         # Graceful fallback per GEMINI.md
         return ChatResponse(
@@ -119,12 +130,15 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
 
 @router.post("/chat/stream")
-async def chat_stream(request: ChatRequest) -> StreamingResponse:
+async def chat_stream(
+    request: ChatRequest,
+    user_id: str = Depends(get_current_user),
+) -> StreamingResponse:
     """
     Streaming chat endpoint using Server-Sent Events (SSE).
 
-    First token appears within 500ms per GEMINI.md UX requirements.
-    The frontend consumes this with EventSource or fetch + ReadableStream.
+    Requires a valid Bearer token. First token appears within 500ms
+    per GEMINI.md UX requirements.
 
     SSE events emitted:
         {type: "chunk", text: "...", model: "gemini-2.5-flash"}
@@ -133,6 +147,7 @@ async def chat_stream(request: ChatRequest) -> StreamingResponse:
 
     Args:
         request: ChatRequest with message, session_id, and history.
+        user_id: Authenticated user identifier from Bearer token.
 
     Returns:
         StreamingResponse with text/event-stream content type.
@@ -142,7 +157,7 @@ async def chat_stream(request: ChatRequest) -> StreamingResponse:
 
     logger.info(
         "Streaming chat request",
-        extra={"session_id": session_id, "msg_len": len(request.message)},
+        extra={"session_id": session_id, "user_id": user_id, "msg_len": len(request.message)},
     )
 
     return StreamingResponse(

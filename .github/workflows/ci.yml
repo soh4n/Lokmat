@@ -51,7 +51,11 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r api/requirements.txt
-          pip install pytest pytest-asyncio httpx ruff mypy respx
+          pip install pytest pytest-asyncio httpx ruff mypy respx pytest-cov pip-audit
+
+      - name: Dependency vulnerability scan
+        run: pip-audit --requirement api/requirements.txt --ignore-vuln PYSEC-2022-42974
+        continue-on-error: true
 
       - name: Lint with ruff
         run: ruff check api/ --output-format=github
@@ -61,11 +65,27 @@ jobs:
         continue-on-error: true
 
       - name: Run tests (Unit & Integration)
-        run: pytest tests/ -v --tb=short
+        run: |
+          pytest tests/ -v --tb=short \
+            --cov=api \
+            --cov-report=xml:coverage.xml \
+            --cov-report=term-missing \
+            --cov-fail-under=80
         env:
           GEMINI_API_KEY: test-key
           DATABASE_URL: postgresql+asyncpg://lokmat_user:test_password@localhost:5432/lokmat_test
           REDIS_URL: redis://localhost:6379/0
+          TESTING: "1"
+          FIREBASE_AUTH_ENABLED: "false"
+          JWT_SECRET: "test-secret-for-ci-only"
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+          retention-days: 7
 
   frontend:
     name: Frontend Build
