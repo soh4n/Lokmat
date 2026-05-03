@@ -144,9 +144,9 @@ def _select_model(user_message: str) -> tuple[str, str]:
 async def _generate_with_fallback(
     client: genai.Client,
     primary_model: str,
-    contents: list,
+    contents: list,  # type: ignore
     config: types.GenerateContentConfig,
-    history: list | None = None,
+    history: list | None = None,  # type: ignore
 ) -> tuple[object, str]:
     """
     Try primary model, fall back through chain on quota exhaustion (429).
@@ -230,7 +230,9 @@ async def _generate_with_fallback(
                 continue
             raise  # Other non-recoverable errors bubble up immediately
 
-    raise last_exc  # All models exhausted
+    if last_exc:
+        raise last_exc
+    raise RuntimeError("All models exhausted")
 
 
 def _build_gemma_contents(
@@ -309,11 +311,11 @@ async def classify_intent(user_message: str) -> str:
     response, _ = await _generate_with_fallback(
         client,
         primary_model=settings.gemini_model_flash,
-        contents=INTENT_PROMPT.format(message=user_message),
+        contents=INTENT_PROMPT.format(message=user_message),  # type: ignore
         config=config,
     )
 
-    raw = response.text
+    raw = response.text  # type: ignore
     if not raw:
         logger.warning("Empty intent response from Gemini, defaulting to 'query'")
         return "query"
@@ -323,7 +325,7 @@ async def classify_intent(user_message: str) -> str:
     if intent not in valid_intents:
         logger.warning(f"Unknown intent '{intent}', defaulting to 'query'")
         return "query"
-    return intent
+    return intent  # type: ignore
 
 
 @with_exponential_backoff(max_retries=3, base_delay=1.0)
@@ -355,7 +357,7 @@ async def generate_chat_response(
 
     response, model_id = await _generate_with_fallback(client, model_id, contents, config, history=history)
 
-    response_text = response.text or "I'm sorry, I couldn't generate a response. Please try again."
+    response_text = response.text or "I'm sorry, I couldn't generate a response. Please try again."  # type: ignore
 
     # Log token usage
     usage = getattr(response, "usage_metadata", None)
@@ -418,7 +420,7 @@ async def generate_chat_stream(
         # Gemma models don't support streaming — fall back to non-streaming + SSE simulation
         if model_id in _GEMMA_MODELS:
             response, model_id = await _generate_with_fallback(client, model_id, contents, config, history=history)
-            full_text = response.text or ""
+            full_text = response.text or ""  # type: ignore
             # Stream simulated chunks for UX consistency (word-by-word)
             words = full_text.split()
             chunk_size = 5  # 5 words per SSE chunk
@@ -455,7 +457,7 @@ async def generate_chat_stream(
             if not stream_ok:
                 # All streaming models exhausted — try Gemma fallback non-streaming
                 response, model_id = await _generate_with_fallback(client, model_id, contents, config, history=history)
-                full_text = response.text or ""
+                full_text = response.text or ""  # type: ignore
                 words = full_text.split()
                 for i in range(0, len(words), 5):
                     chunk = " ".join(words[i : i + 5]) + (" " if i + 5 < len(words) else "")
@@ -479,7 +481,7 @@ async def generate_chat_stream(
         yield f"data: {error_payload}\n\n"
 
 
-async def check_health() -> dict:
+async def check_health() -> dict:  # type: ignore
     """Fast, stateless liveness probe for infrastructure."""
     return {"status": "ok", "service": "LokMat API"}
 

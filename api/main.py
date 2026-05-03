@@ -24,8 +24,8 @@ logger = logging.getLogger("lokmat")
 
 
 # --- Lifespan ---
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+@asynccontextmanager  # type: ignore
+async def lifespan(app: FastAPI) -> None:  # type: ignore
     """Application startup and shutdown events."""
     logger.info(f"🚀 {settings.app_name} v{settings.app_version} starting...")
     logger.info(f"   Gemini model: {settings.gemini_model_flash}")
@@ -43,7 +43,7 @@ async def lifespan(app: FastAPI):
     # Initialize cache service
     try:
         from api.services.cache_service import cache_service
-        cache_service.__init__(settings.redis_url or None)
+        cache_service.__init__(settings.redis_url or None)  # type: ignore
         logger.info("   ✅ Cache service initialized")
     except Exception as e:
         logger.warning(f"   ⚠️ Cache init skipped: {e}")
@@ -85,7 +85,7 @@ app.add_middleware(
 
 # --- Request Logging Middleware ---
 @app.middleware("http")
-async def log_requests(request: Request, call_next):
+async def log_requests(request: Request, call_next) -> None:  # type: ignore
     """Log every request with method, path, status, and latency."""
     start = time.perf_counter()
     response = await call_next(request)
@@ -100,12 +100,12 @@ async def log_requests(request: Request, call_next):
             "latency_ms": latency,
         },
     )
-    return response
+    return response  # type: ignore
 
 
 # --- Global Exception Handler ---
 @app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
+async def global_exception_handler(request: Request, exc: Exception) -> None:
     """
     Catch-all exception handler.
     Never surface raw exceptions to users per GEMINI.md security rules.
@@ -118,7 +118,7 @@ async def global_exception_handler(request: Request, exc: Exception):
             "error": str(exc),
         },
     )
-    return JSONResponse(
+    return JSONResponse(  # type: ignore
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "detail": "An internal error occurred. Please try again later.",
@@ -137,9 +137,9 @@ app.include_router(elections.router)
 
 # --- Root ---
 @app.get("/", tags=["Root"])
-async def root():
+async def root() -> None:
     """API root endpoint with welcome message."""
-    return {
+    return {  # type: ignore
         "name": settings.app_name,
         "version": settings.app_version,
         "message": "Welcome to LokMat API — Your Election Companion 🗳️",

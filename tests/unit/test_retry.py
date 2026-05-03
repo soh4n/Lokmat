@@ -18,12 +18,12 @@ class TransientError(Exception):
 
 
 @pytest.mark.asyncio
-async def test_retry_succeeds_on_first_attempt():
+async def test_retry_succeeds_on_first_attempt() -> None:
     """Function succeeds immediately — no retries needed."""
     call_count = 0
 
     @with_exponential_backoff(max_retries=3, base_delay=0.01)
-    async def succeeds():
+    async def succeeds() -> None:
         nonlocal call_count
         call_count += 1
         return "ok"
@@ -34,17 +34,17 @@ async def test_retry_succeeds_on_first_attempt():
 
 
 @pytest.mark.asyncio
-async def test_retry_succeeds_after_transient_failure():
+async def test_retry_succeeds_after_transient_failure() -> None:
     """Function fails twice then succeeds on third attempt."""
     call_count = 0
 
     @with_exponential_backoff(max_retries=3, base_delay=0.01)
-    async def flaky():
+    async def flaky() -> None:
         nonlocal call_count
         call_count += 1
         if call_count < 3:
             raise TransientError("transient")
-        return "recovered"
+        return "recovered"  # type: ignore
 
     result = await flaky()
     assert result == "recovered"
@@ -52,12 +52,12 @@ async def test_retry_succeeds_after_transient_failure():
 
 
 @pytest.mark.asyncio
-async def test_retry_raises_after_exhaustion():
+async def test_retry_raises_after_exhaustion() -> None:
     """Function fails on all attempts — raises the final exception."""
     call_count = 0
 
     @with_exponential_backoff(max_retries=2, base_delay=0.01)
-    async def always_fails():
+    async def always_fails() -> None:
         nonlocal call_count
         call_count += 1
         raise TransientError(f"fail #{call_count}")
@@ -69,23 +69,23 @@ async def test_retry_raises_after_exhaustion():
 
 
 @pytest.mark.asyncio
-async def test_retry_preserves_return_value():
+async def test_retry_preserves_return_value() -> None:
     """Retry decorator preserves the function's return value."""
     @with_exponential_backoff(max_retries=1, base_delay=0.01)
-    async def returns_dict():
-        return {"status": "ok", "tokens": 42}
+    async def returns_dict() -> None:
+        return {"status": "ok", "tokens": 42}  # type: ignore
 
     result = await returns_dict()
     assert result == {"status": "ok", "tokens": 42}
 
 
 @pytest.mark.asyncio
-async def test_retry_respects_max_retries_zero():
+async def test_retry_respects_max_retries_zero() -> None:
     """With max_retries=0, no retries — fails immediately."""
     call_count = 0
 
     @with_exponential_backoff(max_retries=0, base_delay=0.01)
-    async def no_retry():
+    async def no_retry() -> None:
         nonlocal call_count
         call_count += 1
         raise TransientError("immediate fail")

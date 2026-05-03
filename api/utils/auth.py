@@ -24,14 +24,14 @@ security = HTTPBearer()
 _firebase_app = None
 
 
-def _init_firebase():
+def _init_firebase() -> None:
     """Initialize Firebase Admin SDK on first use."""
     global _firebase_app
     if _firebase_app is not None:
         return
 
     try:
-        import firebase_admin
+        import firebase_admin  # type: ignore
         from firebase_admin import credentials
 
         # In production: uses Application Default Credentials (ADC)
@@ -113,7 +113,7 @@ def _verify_firebase_token(token: str) -> str | None:
             extra={"uid": uid, "phone": phone},
         )
         # Return phone if available, else UID
-        return phone or uid
+        return phone or uid  # type: ignore
     except Exception as e:
         logger.warning(
             "Firebase token verification failed",

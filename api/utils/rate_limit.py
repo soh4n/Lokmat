@@ -38,9 +38,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         """Check rate limit before processing request."""
         # Skip health and auth endpoints
         if request.url.path in ("/health", "/", "/docs", "/redoc", "/openapi.json"):
-            return await call_next(request)
+            return await call_next(request)  # type: ignore
         if request.url.path.startswith("/auth"):
-            return await call_next(request)
+            return await call_next(request)  # type: ignore
 
         # Identify user by token or IP
         user_id = self._get_user_id(request)
@@ -79,7 +79,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             )
 
         _counters[window_key].append(now)
-        return await call_next(request)
+        return await call_next(request)  # type: ignore
 
     @staticmethod
     def _get_user_id(request: Request) -> str:

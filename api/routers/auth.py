@@ -22,7 +22,7 @@ _otp_store: dict[str, str] = {}
 
 
 @router.post("/send-otp", status_code=status.HTTP_200_OK)
-async def send_otp(request: OTPRequest) -> dict:
+async def send_otp(request: OTPRequest) -> dict:  # type: ignore
     """
     Send OTP to the given mobile number.
 

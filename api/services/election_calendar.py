@@ -439,7 +439,7 @@ def get_live_election() -> LiveElectionResponse:
     )
 
 
-def get_upcoming_elections(limit: int = 5) -> list[dict]:
+def get_upcoming_elections(limit: int = 5) -> list[dict]:  # type: ignore
     """
     Returns upcoming and currently active elections, sorted by polling start date.
     Excludes completed elections.

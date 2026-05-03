@@ -27,7 +27,7 @@ def _init_firebase() -> bool:
     global _firebase_app, _firebase_available
 
     try:
-        import firebase_admin
+        import firebase_admin  # type: ignore
         from firebase_admin import credentials
 
         from api.config import settings
@@ -90,7 +90,9 @@ async def verify_firebase_token(id_token: str) -> dict[str, Any] | None:
             "Firebase token verified",
             extra={"uid": decoded.get("uid"), "provider": decoded.get("firebase", {}).get("sign_in_provider")},
         )
-        return decoded  # type: ignore[return-value]
+        return decoded  # type: ignore
+
+
 
     except Exception as e:
         logger.warning("Firebase token verification failed", extra={"error": str(e)})

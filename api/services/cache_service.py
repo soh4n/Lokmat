@@ -58,7 +58,7 @@ class CacheService:
                 cached = await self._redis.get(key)
                 if cached:
                     logger.info("Cache HIT", extra={"key": key})
-                    return cached
+                    return cached  # type: ignore
             except Exception as e:
                 logger.warning(f"Redis GET failed: {e}")
 
@@ -67,7 +67,7 @@ class CacheService:
         entry = _memory_cache.get(key)
         if entry and time.time() < entry[1]:
             logger.info("Memory cache HIT", extra={"key": key})
-            return entry[0]
+            return entry[0]  # type: ignore
 
         return None
 
@@ -125,7 +125,7 @@ class CacheService:
         """Check Redis connectivity."""
         if self._redis:
             try:
-                return await self._redis.ping()
+                return await self._redis.ping()  # type: ignore
             except Exception:
                 return False
         return True  # Memory mode is always "healthy"

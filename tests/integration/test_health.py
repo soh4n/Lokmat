@@ -12,7 +12,7 @@ from api.main import app
 
 
 @pytest.mark.asyncio
-async def test_health_returns_200():
+async def test_health_returns_200() -> None:
     """Health endpoint returns 200 with service status fields."""
     async with AsyncClient(
         transport=ASGITransport(app=app),
@@ -29,7 +29,7 @@ async def test_health_returns_200():
 
 
 @pytest.mark.asyncio
-async def test_health_has_db_field():
+async def test_health_has_db_field() -> None:
     """Health endpoint includes database status."""
     async with AsyncClient(
         transport=ASGITransport(app=app),
@@ -43,7 +43,7 @@ async def test_health_has_db_field():
 
 
 @pytest.mark.asyncio
-async def test_health_has_redis_field():
+async def test_health_has_redis_field() -> None:
     """Health endpoint includes Redis status."""
     async with AsyncClient(
         transport=ASGITransport(app=app),
@@ -56,7 +56,7 @@ async def test_health_has_redis_field():
 
 
 @pytest.mark.asyncio
-async def test_root_returns_welcome():
+async def test_root_returns_welcome() -> None:
     """Root endpoint returns welcome message."""
     async with AsyncClient(
         transport=ASGITransport(app=app),

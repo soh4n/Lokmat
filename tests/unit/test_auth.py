@@ -14,7 +14,7 @@ from api.config import settings
 class TestJWTCreation:
     """Tests for JWT token creation and verification."""
 
-    def test_jwt_encode_decode(self):
+    def test_jwt_encode_decode(self) -> None:
         """JWT token can be created and decoded correctly."""
         payload = {
             "sub": "+919876543210",
@@ -26,7 +26,7 @@ class TestJWTCreation:
         assert decoded["sub"] == "+919876543210"
         assert decoded["phone"] == "+919876543210"
 
-    def test_jwt_invalid_secret_fails(self):
+    def test_jwt_invalid_secret_fails(self) -> None:
         """Token decoded with wrong secret raises an error."""
         payload = {"sub": "+919876543210"}
         token = jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
@@ -34,7 +34,7 @@ class TestJWTCreation:
         with pytest.raises(Exception):
             jwt.decode(token, "wrong-secret", algorithms=[settings.jwt_algorithm])
 
-    def test_jwt_contains_expected_claims(self):
+    def test_jwt_contains_expected_claims(self) -> None:
         """Token contains the expected claims."""
         payload = {
             "sub": "+919876543210",

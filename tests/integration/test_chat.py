@@ -13,7 +13,7 @@ from api.main import app
 
 
 @pytest.mark.asyncio
-async def test_chat_valid_message():
+async def test_chat_valid_message() -> None:
     """Sending a valid chat message returns 200 with expected fields."""
     async with AsyncClient(
         transport=ASGITransport(app=app),
@@ -38,7 +38,7 @@ async def test_chat_valid_message():
 
 
 @pytest.mark.asyncio
-async def test_chat_empty_message_returns_422():
+async def test_chat_empty_message_returns_422() -> None:
     """Empty chat message returns 422."""
     async with AsyncClient(
         transport=ASGITransport(app=app),
@@ -53,7 +53,7 @@ async def test_chat_empty_message_returns_422():
 
 
 @pytest.mark.asyncio
-async def test_chat_returns_intent_field():
+async def test_chat_returns_intent_field() -> None:
     """Chat response includes an intent classification."""
     async with AsyncClient(
         transport=ASGITransport(app=app),

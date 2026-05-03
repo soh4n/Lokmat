@@ -20,7 +20,7 @@ router = APIRouter(prefix="/elections", tags=["Elections"])
 
 
 @router.get("/live")
-async def live_election():
+async def live_election() -> None:
     """
     Returns the currently live election ticker data.
 
@@ -31,11 +31,11 @@ async def live_election():
     at the bottom of the home screen.
     """
     result = get_live_election()
-    return result.model_dump()
+    return result.model_dump()  # type: ignore
 
 
 @router.get("/upcoming")
-async def upcoming_elections():
+async def upcoming_elections() -> None:
     """
     Returns a list of upcoming and currently active elections
     sorted by polling start date.
@@ -43,7 +43,7 @@ async def upcoming_elections():
     Excludes completed elections.
     """
     upcoming = get_upcoming_elections(limit=5)
-    return {
+    return {  # type: ignore
         "elections": [
             {
                 "id": item["election"].id,

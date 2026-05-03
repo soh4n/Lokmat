@@ -76,7 +76,7 @@ class UserRepository:
         for key, value in kwargs.items():
             if hasattr(user, key):
                 setattr(user, key, value)
-        user.updated_at: datetime = datetime.now(UTC)  # type: ignore[assignment]
+        user.updated_at = datetime.now(UTC)  # type: ignore[assignment]
         await self.db.flush()
         logger.info(f"User updated: {user.phone}")
         return user

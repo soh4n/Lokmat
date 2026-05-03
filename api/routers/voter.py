@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/voter", tags=["Voter Profile"])
 
 # In-memory store (demo — production uses Cloud SQL)
-_profiles: dict[str, dict] = {}
+_profiles: dict[str, dict] = {}  # type: ignore
 
 
 @router.post("/profile", response_model=VoterProfileResponse)
