@@ -60,15 +60,8 @@ jobs:
         run: mypy api/ --ignore-missing-imports
         continue-on-error: true
 
-      - name: Run unit tests
-        run: pytest tests/unit/ -v --tb=short
-        env:
-          GEMINI_API_KEY: test-key
-          DATABASE_URL: postgresql+asyncpg://lokmat_user:test_password@localhost:5432/lokmat_test
-          REDIS_URL: redis://localhost:6379/0
-
-      - name: Run integration tests
-        run: pytest tests/integration/ -v --tb=short
+      - name: Run tests (Unit & Integration)
+        run: pytest tests/ -v --tb=short
         env:
           GEMINI_API_KEY: test-key
           DATABASE_URL: postgresql+asyncpg://lokmat_user:test_password@localhost:5432/lokmat_test
