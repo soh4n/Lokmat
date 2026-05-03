@@ -9,17 +9,17 @@ Tests the new Tier 2 features:
 - classify_intent: valid/invalid responses
 """
 
-import pytest
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 
 # --- _select_model tests ---
 
 def test_select_model_returns_flash_for_short_simple():
     """Short queries always use Flash."""
-    from api.services.gemini_service import _select_model
     from api.config import settings
+    from api.services.gemini_service import _select_model
     model_id, reason = _select_model("What is NOTA?")
     assert model_id == settings.gemini_model_flash
     assert reason == "default"
@@ -27,8 +27,8 @@ def test_select_model_returns_flash_for_short_simple():
 
 def test_select_model_returns_flash_for_long_without_keywords():
     """Long messages without complexity keywords still use Flash."""
-    from api.services.gemini_service import _select_model
     from api.config import settings
+    from api.services.gemini_service import _select_model
     long_msg = "Tell me about voting " * 20  # > 200 chars, no complexity keywords
     model_id, reason = _select_model(long_msg)
     assert model_id == settings.gemini_model_flash
@@ -36,16 +36,16 @@ def test_select_model_returns_flash_for_long_without_keywords():
 
 def test_select_model_returns_flash_for_complex_but_short():
     """Complex keyword but short message stays on Flash."""
-    from api.services.gemini_service import _select_model
     from api.config import settings
+    from api.services.gemini_service import _select_model
     model_id, reason = _select_model("Compare EVMs and ballot papers")
     assert model_id == settings.gemini_model_flash  # short < 200 chars
 
 
 def test_select_model_escalates_to_pro_for_long_complex():
     """Long + complex query escalates to Pro."""
-    from api.services.gemini_service import _select_model
     from api.config import settings
+    from api.services.gemini_service import _select_model
     # Construct a message > 200 chars containing a complexity keyword
     msg = "Please compare and analyse the constitutional implications of " + "electronic voting machines " * 10
     model_id, reason = _select_model(msg)
@@ -59,8 +59,8 @@ def test_select_model_escalates_to_pro_for_long_complex():
 ])
 def test_select_model_pro_keywords(keyword):
     """Each complexity keyword triggers Pro when message is long enough."""
-    from api.services.gemini_service import _select_model
     from api.config import settings
+    from api.services.gemini_service import _select_model
     # Make sure the message is > 200 chars
     msg = f"Please {keyword} the voting system in India " + "with detailed examples " * 10
     model_id, _ = _select_model(msg)

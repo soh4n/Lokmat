@@ -7,10 +7,10 @@ Per GEMINI.md: No SQL in routers. All DB access through repositories.
 
 import logging
 from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Any
 
 from api.models.models import User
 

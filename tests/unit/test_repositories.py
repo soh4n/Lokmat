@@ -1,8 +1,11 @@
 """Unit tests for repositories."""
-import pytest
 from unittest.mock import AsyncMock, MagicMock
-from api.repositories.user_repo import UserRepository
+
+import pytest
+
 from api.repositories.session_repo import SessionRepository
+from api.repositories.user_repo import UserRepository
+
 
 @pytest.mark.asyncio
 async def test_user_repository():

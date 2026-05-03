@@ -14,13 +14,13 @@ from unittest.mock import patch
 import pytest
 
 from api.services.election_calendar import (
-    _compute_status,
+    INDIA_ELECTION_CALENDAR,
+    ElectionStatus,
     _compute_current_phase,
     _compute_progress,
+    _compute_status,
     get_live_election,
     get_upcoming_elections,
-    ElectionStatus,
-    INDIA_ELECTION_CALENDAR,
 )
 
 

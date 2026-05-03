@@ -9,8 +9,9 @@ Tests that:
 """
 
 import json
-import pytest
 from unittest.mock import patch
+
+import pytest
 from httpx import ASGITransport, AsyncClient
 
 from api.main import app

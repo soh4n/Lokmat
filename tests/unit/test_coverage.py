@@ -1,15 +1,17 @@
-import pytest
 from typing import Any
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 # Import all models to get definition coverage
 import api.models.models
-from api.models.models import Base, User, ChatSession, ChatMessage, AuditLog
-from api.services.audit_service import audit
+from api.models.models import AuditLog, Base, ChatMessage, ChatSession, User
 from api.repositories.session_repo import SessionRepository
 from api.repositories.user_repo import UserRepository
+from api.services.audit_service import audit
 from api.services.cache_service import CacheService
-from api.utils.auth import create_access_token, verify_token, _verify_local_jwt
+from api.utils.auth import _verify_local_jwt, create_access_token, verify_token
+
 
 @pytest.mark.asyncio
 async def test_session_repository() -> None:
@@ -58,8 +60,9 @@ def test_auth_utils() -> None:
 
 @pytest.mark.asyncio
 async def test_rate_limit() -> None:
-    from api.utils.rate_limit import RateLimitMiddleware
     from fastapi import Request
+
+    from api.utils.rate_limit import RateLimitMiddleware
     req = MagicMock(spec=Request)
     req.url.path = "/health"
     limiter = RateLimitMiddleware(app=MagicMock())
