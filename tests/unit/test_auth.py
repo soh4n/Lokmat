@@ -12,7 +12,6 @@ Per GEMINI.md testing requirements:
 from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
-import pytest
 from jose import jwt
 
 from api.config import settings

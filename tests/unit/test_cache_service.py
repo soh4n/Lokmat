@@ -9,7 +9,7 @@ Per GEMINI.md testing requirements:
 """
 
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -126,12 +126,12 @@ class TestCacheServiceRedisFailure:
     async def test_rate_limit_returns_true_on_redis_error(self) -> None:
         """Rate limit check returns True (allow all) on Redis error — fail-open."""
         svc = CacheService.__new__(CacheService)
-        mock_pipe = AsyncMock()
+        mock_pipe = MagicMock()
         mock_pipe.incr = AsyncMock()
         mock_pipe.expire = AsyncMock()
         mock_pipe.execute.side_effect = ConnectionError("Redis down")
 
-        svc._redis = AsyncMock()
+        svc._redis = MagicMock()
         svc._redis.pipeline.return_value = mock_pipe
 
         result = await svc.check_rate_limit("user_test", limit=5, window=60)

@@ -61,10 +61,9 @@ warn_unused_ignores = true
 [[tool.mypy.overrides]]
 module = [
     "google.*",
+    "firebase_admin.*",
     "jose.*",
     "sqlalchemy.*",
-    "aiosqlite.*",
-    "uvicorn.*",
     "starlette.*",
     "fastapi.*",
     "pydantic_settings.*",
@@ -74,6 +73,7 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 addopts = "--cov=api --cov-report=term-missing --cov-report=html:htmlcov --cov-fail-under=80"
 filterwarnings = [
     "ignore::DeprecationWarning",

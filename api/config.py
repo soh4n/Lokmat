@@ -5,6 +5,10 @@ All configuration via pydantic-settings. No raw os.environ outside this file.
 Secrets injected at runtime via environment variables (or Secret Manager in production).
 """
 
+import secrets
+from typing import Any
+
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,6 +25,7 @@ class Settings(BaseSettings):
     app_name: str = "LokMat API"
     app_version: str = "1.0.0"
     debug: bool = False
+    testing: bool = False
 
     # Server
     host: str = "0.0.0.0"
@@ -29,7 +34,15 @@ class Settings(BaseSettings):
         "http://localhost:5173",
         "http://localhost:3000",
         "https://lokmat-495121.web.app",
-        "https://lokmat-495121.firebaseapp.com"
+        "https://lokmat-495121.firebaseapp.com",
+    ]
+    allowed_hosts: list[str] = [
+        "test",
+        "localhost",
+        "127.0.0.1",
+        "lokmat-495121.web.app",
+        "lokmat-495121.firebaseapp.com",
+        "*.run.app",
     ]
 
     # GCP Project
@@ -39,7 +52,7 @@ class Settings(BaseSettings):
     firebase_auth_enabled: bool = True
 
     # Legacy JWT (used when firebase_auth_enabled=false)
-    jwt_secret: str = "lokmat-dev-secret-change-in-production"
+    jwt_secret: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
     jwt_algorithm: str = "HS256"
     jwt_expiry_minutes: int = 1440  # 24 hours
 
@@ -67,6 +80,20 @@ class Settings(BaseSettings):
     # Token Budget (per GEMINI.md efficiency rules)
     max_context_tokens: int = 8_000
     warn_threshold_tokens: int = 50_000
+
+    @field_validator("debug", "firebase_auth_enabled", "testing", mode="before")
+    @classmethod
+    def parse_boolish_environment(cls, value: Any) -> Any:
+        """Accept common deployment-mode strings for boolean environment flags."""
+        if not isinstance(value, str):
+            return value
+
+        normalized = value.strip().lower()
+        if normalized in {"release", "prod", "production", "false", "0", "no", "off"}:
+            return False
+        if normalized in {"debug", "dev", "development", "true", "1", "yes", "on"}:
+            return True
+        return value
 
     @property
     def clean_gemini_api_key(self) -> str:

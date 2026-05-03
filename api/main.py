@@ -86,7 +86,7 @@ app.add_middleware(
 # Trusted host validation — rejects Host header spoofing attacks
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=["*"],  # Cloud Run handles TLS termination; refine in prod
+    allowed_hosts=settings.allowed_hosts,
 )
 
 

@@ -1,31 +1,45 @@
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 # Import all models to get definition coverage
-import api.models.models
-from api.models.models import AuditLog, Base, ChatMessage, ChatSession, User
+from api.models.models import ChatSession, User
 from api.repositories.session_repo import SessionRepository
 from api.repositories.user_repo import UserRepository
 from api.services.audit_service import audit
 from api.services.cache_service import CacheService
-from api.utils.auth import _verify_local_jwt, create_access_token, verify_token
+from api.utils.auth import create_access_token, verify_token
+
+
+class _Result:
+    def __init__(self, scalar: object) -> None:
+        self._scalar = scalar
+
+    def scalar_one_or_none(self) -> object:
+        return self._scalar
+
+
+class _FakeDb:
+    def __init__(self, scalar: object) -> None:
+        self._result = _Result(scalar)
+
+    async def execute(self, statement: object) -> _Result:
+        self.statement = statement
+        return self._result
 
 
 @pytest.mark.asyncio
 async def test_session_repository() -> None:
-    mock_db = AsyncMock()
+    mock_db = _FakeDb(ChatSession(id="123"))
     repo = SessionRepository(mock_db)
-    mock_db.execute.return_value.scalars.return_value.first.return_value = ChatSession(id="123")
     res = await repo.get_session("123")
     assert res is not None
 
 @pytest.mark.asyncio
 async def test_user_repository() -> None:
-    mock_db = AsyncMock()
+    mock_db = _FakeDb(User(phone="9999"))
     repo = UserRepository(mock_db)
-    mock_db.execute.return_value.scalars.return_value.first.return_value = User(phone="9999")
     res = await repo.get_by_phone("9999")
     assert res is not None
 

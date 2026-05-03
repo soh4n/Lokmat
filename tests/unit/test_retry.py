@@ -5,7 +5,6 @@ Per GEMINI.md testing requirements:
 - Retry decorator retries on transient errors and raises after exhaustion.
 """
 
-import asyncio
 
 import pytest
 

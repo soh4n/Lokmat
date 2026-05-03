@@ -11,8 +11,6 @@ Verifies:
 from datetime import date
 from unittest.mock import patch
 
-import pytest
-
 from api.services.election_calendar import (
     INDIA_ELECTION_CALENDAR,
     ElectionStatus,

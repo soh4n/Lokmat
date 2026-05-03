@@ -10,14 +10,11 @@ Per GEMINI.md testing requirements:
 """
 
 import time
-from collections import defaultdict
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from starlette.testclient import TestClient
 
 from api.utils.rate_limit import INFERENCE_PATHS, RateLimitMiddleware, _counters
-
 
 # ---------------------------------------------------------------------------
 # Helper — reset the global counter between tests
@@ -88,7 +85,7 @@ class TestSlidingWindow:
         limit = 5
         window = 60
 
-        for i in range(limit):
+        for _ in range(limit):
             _counters[key] = [ts for ts in _counters[key] if now - ts < window]
             assert len(_counters[key]) < limit
             _counters[key].append(now)

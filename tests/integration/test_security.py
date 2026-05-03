@@ -22,7 +22,6 @@ from jose import jwt
 from api.config import settings
 from api.main import app
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -130,6 +129,7 @@ class TestRateLimiting:
     async def test_rate_limit_returns_429_with_retry_after(self) -> None:
         """Exceeding the rate limit returns 429 with Retry-After header."""
         import time
+
         from api.utils.rate_limit import _counters
 
         # Pre-seed the counter to simulate the limit being hit for our test user token
@@ -218,6 +218,7 @@ class TestOTPSecurity:
     async def test_otp_uses_secrets_not_random(self) -> None:
         """OTP is generated using secrets module (cryptographically secure)."""
         import inspect
+
         import api.routers.auth as auth_module
         source = inspect.getsource(auth_module)
         # The old insecure pattern must NOT be present

@@ -9,7 +9,7 @@ ID token verification on every request.
 """
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 logger = logging.getLogger(__name__)
 
@@ -27,10 +27,15 @@ def _init_firebase() -> bool:
     global _firebase_app, _firebase_available
 
     try:
-        import firebase_admin  # type: ignore
+        import firebase_admin
         from firebase_admin import credentials
 
         from api.config import settings
+
+        if settings.testing:
+            logger.info("Firebase Admin SDK disabled in testing mode")
+            _firebase_available = False
+            return False
 
         if firebase_admin._apps:  # Already initialised
             _firebase_available = True
@@ -38,9 +43,6 @@ def _init_firebase() -> bool:
 
         # In production: use Application Default Credentials (Cloud Run SA)
         # In dev: falls back gracefully if no credentials are set
-        import os
-        if os.environ.get("TESTING") == "1":
-            raise Exception("Testing mode, skipping ADC")
         try:
             cred = credentials.ApplicationDefault()
             _firebase_app = firebase_admin.initialize_app(cred, {
@@ -93,7 +95,7 @@ async def verify_firebase_token(id_token: str) -> dict[str, Any] | None:
             "Firebase token verified",
             extra={"uid": decoded.get("uid"), "provider": decoded.get("firebase", {}).get("sign_in_provider")},
         )
-        return decoded  # type: ignore
+        return cast(dict[str, Any], decoded)
 
 
 

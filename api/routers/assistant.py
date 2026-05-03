@@ -16,21 +16,40 @@ Implements the context pipeline from GEMINI.md:
 """
 
 import logging
+from collections.abc import AsyncGenerator
+from typing import cast
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
 from api.schemas.schemas import ChatRequest, ChatResponse, IntentType
-from api.services.gemini_service import (
-    classify_intent,
-    generate_chat_response,
-    generate_chat_stream,
-)
+from api.services import gemini_service
 from api.utils.auth import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Assistant"])
+
+
+async def classify_intent(user_message: str) -> str:
+    """Delegate intent classification through the service layer."""
+    return cast(str, await gemini_service.classify_intent(user_message))
+
+
+async def generate_chat_response(
+    user_message: str,
+    history: list[dict[str, str]],
+) -> tuple[str, list[str], str]:
+    """Delegate full chat generation through the service layer."""
+    return cast(tuple[str, list[str], str], await gemini_service.generate_chat_response(user_message, history))
+
+
+def generate_chat_stream(
+    user_message: str,
+    history: list[dict[str, str]],
+) -> AsyncGenerator[str, None]:
+    """Delegate streaming chat generation through the service layer."""
+    return gemini_service.generate_chat_stream(user_message, history)
 
 
 @router.post("/chat", response_model=ChatResponse)

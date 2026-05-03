@@ -10,6 +10,7 @@ Mode is controlled by FIREBASE_AUTH_ENABLED in config.
 
 import logging
 from datetime import UTC, datetime, timedelta
+from typing import cast
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -33,11 +34,9 @@ def _init_firebase() -> None:
     try:
         # In production: uses Application Default Credentials (ADC)
         # Cloud Run automatically provides the service account credentials
-        import os
-
         import firebase_admin
         from firebase_admin import credentials
-        if os.environ.get("TESTING") == "1":
+        if settings.testing:
             raise Exception("Testing mode, skipping ADC")
         cred = credentials.ApplicationDefault()
         _firebase_app = firebase_admin.initialize_app(cred, {
@@ -116,7 +115,7 @@ def _verify_firebase_token(token: str) -> str | None:
             extra={"uid": uid, "phone": phone},
         )
         # Return phone if available, else UID
-        return phone or uid  # type: ignore
+        return cast(str | None, phone or uid)
     except Exception as e:
         logger.warning(
             "Firebase token verification failed",
