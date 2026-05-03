@@ -9,6 +9,7 @@ Two-layer rate limiting per GEMINI.md:
 import logging
 import time
 from collections import defaultdict
+from typing import Any
 
 from fastapi import Request, Response, status
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -33,7 +34,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     - Inference: 10 req/min per user
     """
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(self, request: Request, call_next: Any) -> Response:
         """Check rate limit before processing request."""
         # Skip health and auth endpoints
         if request.url.path in ("/health", "/", "/docs", "/redoc", "/openapi.json"):

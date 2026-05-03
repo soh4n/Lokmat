@@ -102,9 +102,12 @@ def test_build_contents_empty_history():
 def test_build_contents_maps_assistant_to_model():
     """Assistant role in history maps to 'model' for Gemini API."""
     from api.services.gemini_service import _build_contents
-    history = [{"role": "assistant", "content": "Sure!"}]
+    history = [
+        {"role": "user", "content": "Hi"},
+        {"role": "assistant", "content": "Sure!"}
+    ]
     contents = _build_contents("Follow up", history)
-    assert contents[0].role == "model"
+    assert contents[1].role == "model"
 
 
 # --- _extract_suggestions tests ---
@@ -163,12 +166,12 @@ async def test_generate_chat_stream_emits_chunk_events():
     mock_chunk_2 = MagicMock()
     mock_chunk_2.text = "is important."
 
-    mock_stream_ctx = MagicMock()
-    mock_stream_ctx.__enter__ = MagicMock(return_value=iter([mock_chunk_1, mock_chunk_2]))
-    mock_stream_ctx.__exit__ = MagicMock(return_value=False)
+    async def mock_stream():
+        yield mock_chunk_1
+        yield mock_chunk_2
 
     mock_client = MagicMock()
-    mock_client.models.generate_content_stream.return_value = mock_stream_ctx
+    mock_client.aio.models.generate_content_stream = AsyncMock(return_value=mock_stream())
 
     with patch("api.services.gemini_service._get_client", return_value=mock_client):
         events = []
@@ -195,12 +198,11 @@ async def test_generate_chat_stream_emits_done_event():
     mock_chunk = MagicMock()
     mock_chunk.text = "OK"
 
-    mock_stream_ctx = MagicMock()
-    mock_stream_ctx.__enter__ = MagicMock(return_value=iter([mock_chunk]))
-    mock_stream_ctx.__exit__ = MagicMock(return_value=False)
+    async def mock_stream():
+        yield mock_chunk
 
     mock_client = MagicMock()
-    mock_client.models.generate_content_stream.return_value = mock_stream_ctx
+    mock_client.aio.models.generate_content_stream = AsyncMock(return_value=mock_stream())
 
     with patch("api.services.gemini_service._get_client", return_value=mock_client):
         events = []
@@ -220,7 +222,7 @@ async def test_generate_chat_stream_emits_error_event_on_exception():
     from api.services.gemini_service import generate_chat_stream
 
     mock_client = MagicMock()
-    mock_client.models.generate_content_stream.side_effect = RuntimeError("API down")
+    mock_client.aio.models.generate_content_stream.side_effect = RuntimeError("API down")
 
     with patch("api.services.gemini_service._get_client", return_value=mock_client):
         events = []

@@ -19,7 +19,7 @@ def with_exponential_backoff(
     max_retries: int = 3,
     base_delay: float = 1.0,
     multiplier: float = 2.0,
-) -> Callable:
+) -> Callable[..., Any]:
     """
     Decorator that retries an async function with exponential backoff + jitter.
 

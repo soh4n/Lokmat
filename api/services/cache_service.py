@@ -29,7 +29,7 @@ class CacheService:
         if redis_url:
             try:
                 import redis.asyncio as aioredis
-                self._redis = aioredis.from_url(redis_url, decode_responses=True)
+                self._redis = aioredis.from_url(redis_url, decode_responses=True)  # type: ignore[no-untyped-call]
                 logger.info("Redis cache connected")
             except Exception as e:
                 logger.warning(f"Redis unavailable, using memory cache: {e}")

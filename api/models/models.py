@@ -27,7 +27,7 @@ class User(Base):
     full_name_hi = Column(String(200), default="")
     epic_no = Column(String(10), unique=True, nullable=False, index=True)
     dob = Column(String(10), nullable=False)
-    gender = Column(Enum("male", "female", "other", name="gender_enum"), nullable=False)
+    gender: str = Column(Enum("male", "female", "other", name="gender_enum"), nullable=False)  # type: ignore[assignment]
     father_name = Column(String(200), default="")
     address = Column(String(500), default="")
     state = Column(String(100), nullable=False)
@@ -61,7 +61,7 @@ class ChatMessage(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     session_id = Column(String(36), ForeignKey("chat_sessions.id"), nullable=False, index=True)
-    role = Column(Enum("user", "assistant", name="role_enum"), nullable=False)
+    role: str = Column(Enum("user", "assistant", name="role_enum"), nullable=False)  # type: ignore[assignment]
     content = Column(Text, nullable=False)
     intent = Column(String(20), default="query")
     tokens_used = Column(Integer, default=0)

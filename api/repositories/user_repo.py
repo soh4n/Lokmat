@@ -10,6 +10,7 @@ from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Any
 
 from api.models.models import User
 
@@ -44,7 +45,7 @@ class UserRepository:
         )
         return result.scalar_one_or_none()
 
-    async def create(self, phone: str, **kwargs) -> User:
+    async def create(self, phone: str, **kwargs: Any) -> User:
         """
         Create a new user.
 
@@ -61,7 +62,7 @@ class UserRepository:
         logger.info(f"User created: {phone}")
         return user
 
-    async def update(self, user: User, **kwargs) -> User:
+    async def update(self, user: User, **kwargs: Any) -> User:
         """
         Update an existing user's profile fields.
 
@@ -75,12 +76,12 @@ class UserRepository:
         for key, value in kwargs.items():
             if hasattr(user, key):
                 setattr(user, key, value)
-        user.updated_at = datetime.now(UTC)
+        user.updated_at: datetime = datetime.now(UTC)  # type: ignore[assignment]
         await self.db.flush()
         logger.info(f"User updated: {user.phone}")
         return user
 
-    async def create_or_update(self, phone: str, **kwargs) -> User:
+    async def create_or_update(self, phone: str, **kwargs: Any) -> User:
         """
         Create a new user or update existing one.
 
