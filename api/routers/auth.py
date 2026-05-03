@@ -19,6 +19,7 @@ import time
 
 from fastapi import APIRouter, HTTPException, status
 
+from api.config import settings
 from api.schemas.schemas import AuthToken, OTPRequest, OTPVerifyRequest
 from api.utils.auth import create_access_token
 
@@ -71,12 +72,15 @@ async def send_otp(request: OTPRequest) -> dict:  # type: ignore
         extra={"phone": _mask_phone(request.phone)},
     )
 
-    # In production, call SMS gateway here and omit demo_otp
-    return {
+    # In production the SMS gateway delivers the OTP; demo_otp is only
+    # included in non-production (debug) mode so developers can test the flow.
+    response: dict = {  # type: ignore[type-arg]
         "message": "OTP sent successfully. Valid for 5 minutes.",
         "phone": request.phone,
-        "demo_otp": otp,  # TODO: remove before production launch
     }
+    if settings.debug:
+        response["demo_otp"] = otp  # Visible only in debug / local dev
+    return response
 
 
 @router.post("/verify-otp", response_model=AuthToken)

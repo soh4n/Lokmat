@@ -74,3 +74,11 @@ logs/
 
 # --- Design ---
 stitch_app_design_implementation/
+
+# --- Debug / one-off scripts (never commit) ---
+fix_*.py
+add_ignores.py
+mypy*.txt
+*.log
+lokmat.db
+fix_ruf002.py

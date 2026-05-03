@@ -243,18 +243,19 @@ class TestInputValidation:
 
     @pytest.mark.asyncio
     async def test_chat_empty_message_returns_422(self) -> None:
-        """Empty chat message fails validation (422) even with auth token."""
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
-            r = await c.post("/chat", json={"message": "", "history": []}, headers=_auth_headers())
-        # 422 with auth (schema validation), or 401 if auth fires first
-        assert r.status_code in (401, 422)
+        """Empty chat message fails Pydantic validation (422) when auth passes."""
+        with patch.object(settings, "firebase_auth_enabled", False):
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+                r = await c.post("/chat", json={"message": "", "history": []}, headers=_auth_headers())
+        assert r.status_code == 422
 
     @pytest.mark.asyncio
     async def test_chat_missing_message_field_returns_422(self) -> None:
-        """Missing required field returns 422 (with auth) or 401 (no auth)."""
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
-            r = await c.post("/chat", json={"history": []}, headers=_auth_headers())
-        assert r.status_code in (401, 422)
+        """Missing required 'message' field returns 422 when auth passes."""
+        with patch.object(settings, "firebase_auth_enabled", False):
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+                r = await c.post("/chat", json={"history": []}, headers=_auth_headers())
+        assert r.status_code == 422
 
 
 # ---------------------------------------------------------------------------

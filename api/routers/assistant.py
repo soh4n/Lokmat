@@ -42,7 +42,7 @@ async def chat(
     Process a chat message through the election AI assistant pipeline.
 
     Requires a valid Bearer token. Row-level data is scoped to the
-    authenticated user’s session.
+    authenticated user's session.
 
     Pipeline:
     1. Classify intent (query/action/clarify/out_of_scope)
